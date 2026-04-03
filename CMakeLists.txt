@@ -19,8 +19,14 @@ FetchContent_MakeAvailable(glfw)
 #find openGL
 find_package(OpenGL REQUIRED)
 
+# Create GLAD static library
+add_library(glad STATIC ext/glad/src/glad.c)
+
+# Tell CMake where headers are
+target_include_directories(glad PUBLIC ext/glad/include)
+
 # ---- Build executable ----
 add_executable(MyApp main.cpp)
 
 set(GLFW_BUILD_SHARED_LIBS OFF CACHE BOOL "Build GLFW as static library")
-target_link_libraries(MyApp PRIVATE glfw  OpenGL::GL)
+target_link_libraries(MyApp PRIVATE glfw glad OpenGL::GL)
