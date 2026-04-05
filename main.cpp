@@ -9,6 +9,12 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
+void processInput(GLFWwindow *window)
+{
+    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)// if it's not pressed, glfwGetKey returns GLFW_RELEASE
+        glfwSetWindowShouldClose(window, true);
+}
+
 int main() {
     glfwInit(); // Initiates glfw (returns GL_TRUE if successfull)
 
@@ -43,8 +49,16 @@ int main() {
 
     //render loop
     while (!glfwWindowShouldClose(window)) {
+        //input function called each frame
+        processInput(window);
+
+        //glClear uses this color to clear the screen (sets it doesnt have to be called always)
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        //clear the buffer so you wont see previous frame (you have to specify which one)
+        glClear(GL_COLOR_BUFFER_BIT);
+
         glfwSwapBuffers(window); //swaps color buffer in window
-        glfwPollEvents();//checks for events in window(keys, mouse, etc)
+        glfwPollEvents();//processes events received in window and returns a response(if requested)
     }
 
     //clean glfw resources;
