@@ -1,3 +1,4 @@
+#include <cmath>
 #include <iostream>
 #include <ostream>
 #include <glad/glad.h> //glad should always be put first to prevent redefinition use of OpenGL
@@ -12,9 +13,10 @@ const char *vertexShaderSource = "#version 330 core\n"
 
 const char *fragmentShaderSource = "#version 330 core\n"
         "out vec4 FragColor;\n"
+        "uniform vec4 ourColor;"
         "void main()\n"
         "{\n"
-        "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+        "   FragColor = ourColor;\n"
         "}";
 
 const unsigned int SCREEN_HEIGHT = 600;
@@ -68,58 +70,83 @@ int main() {
     //set glViewport so first frame renders correctly before hiting our resize function
     glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-    unsigned int vertexShader; // ID for Vertexxshader
-    //creates empty shader object and stores it in variable(like an ID)
-    vertexShader = glCreateShader(GL_VERTEX_SHADER); // define that you want a use a vertex shader
-    //takes shader object you created(vertex shader) and copies the data in pointer (&vertexShaderSource)
-    //Basically how to read shader code and put it in ID
+    // This will store the ID (handle) for the vertex shader
+    unsigned int vertexShader;
+
+    // Create an empty vertex shader object and return its ID
+    vertexShader = glCreateShader(GL_VERTEX_SHADER);
+
+    // Give the shader its source code
+    // vertexShader = the shader object
+    // 1 = number of strings
+    // &vertexShaderSource = pointer to the shader code
+    // NULL = let OpenGL figure out string length
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    //takes the object(ID) and compiles it
+
+    // Compile the shader code
     glCompileShader(vertexShader);
 
-    //Check if Shader Compilation was false with glGetShaderiv(object to check, what to check in the object, where to store the returned data)
+    // Check if compilation was successful
     int success;
     char infoLog[512];
+
+    // Ask OpenGL for the compile status (success or fail)
     glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+
     if (!success) {
-        //retrueve error
+        // If it failed, get the error message
         glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+        std::cout << "ERROR::VERTEX SHADER COMPILATION FAILED\n" << infoLog << std::endl;
     }
 
+    // Fragment Shader (same process)
 
-    //same as vertex shader but now for fragment shader
+    // Store ID for fragment shader
     unsigned int fragmentShader;
+
+    // Create fragment shader object
     fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+
+    // Give it source code
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+
+    // Compile it
     glCompileShader(fragmentShader);
 
-    //Check if Shader Compilation was false with glGetShaderiv(object to check, what to check in the object, where to store the returned data)
+    // Check if compilation worked
     glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+
     if (!success) {
-        //retrueve error
+        // Get error message if it failed
         glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+        std::cout << "ERROR::FRAGMENT SHADER COMPILATION FAILED\n" << infoLog << std::endl;
     }
 
-    //After creating shaders you have to compile them into a shader program
+    // Shader Program
+
+    // Create a shader program (this links shaders together)
     unsigned int shaderProgram;
-    //creates shader program and returns ID to shaderprogram
     shaderProgram = glCreateProgram();
 
-    //attach shaders and link to program
+    // Attach both shaders to the program
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
+
+    // Link the shaders into one complete program
     glLinkProgram(shaderProgram);
 
+    // Check if linking was successful
     glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+
     if (!success) {
-        //retrueve error
+        // Get error message if linking failed
         glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+        std::cout << "ERROR::SHADER PROGRAM LINKING FAILED\n" << infoLog << std::endl;
     }
 
-    //you can now delete the shaders so it wont be sitting in memory and get best performance
+
+    // After linking, the individual shaders are no longer needed
+    // The program already has everything it needs
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
@@ -136,21 +163,34 @@ int main() {
         1, 2, 3 // second Triangle
     };
 
-    //VBO stores vertex data (data)
-    //VAO tells how to use the data (config)
-    //stores the buffer(s)
-    // VBO or VAO is the "ID" for the buffer because it holds the location of the buffer
+    // VBO = stores the actual vertex data (like positions, colors, etc.)
+    // VAO = remembers how to use that data (how OpenGL should read it)
+    // EBO = stores index data (which vertices to draw and in what order)
+
+    // These variables will hold IDs (like handles) for the buffers
     unsigned int VBO, VAO, EBO;
-    //makes 1 buffer and stores it in VBO or VAO
+
+    // Create 1 VAO and store its ID in VAO
     glGenVertexArrays(1, &VAO);
+
+    // Create 1 VBO and store its ID in VBO
     glGenBuffers(1, &VBO);
+
+    // Create 1 EBO and store its ID in EBO
     glGenBuffers(1, &EBO);
-    //bind the vertex array object so opengl knows where to store config
+
+    // Bind the VAO so OpenGL knows we are working with it now
+    // Any setup we do will be saved inside this VAO
     glBindVertexArray(VAO);
-    //Bind the VBO to GL_ARRAY_BUFFER which is the buffer where vertex data is transfered
-    //this also makes the following GL_ARRAY_BUFFER calls to configure the data from VBO
+
+    // Bind the VBO to GL_ARRAY_BUFFER
+    // This means we are now working with this VBO for vertex data
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    //allocates and stores data of buffer also tells it where to copy from and how to read it
+
+    // Copy vertex data into the VBO
+    // sizeof(vertices) = size of the data
+    // vertices = the actual data
+    // GL_STATIC_DRAW = data will not change much
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     //GL_STREAM_DRAW: the data is set only once and used by the GPU at most a few times.
     //GL_STATIC_DRAW: the data is set only once and used many times.
@@ -162,24 +202,28 @@ int main() {
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 
-    //tell openGL how to read and interpret the Vertex attributes from our vertex data
-    //where the location of the position vertex attribute in vertex shader is( (location = 0) )
-    //how many attributes per vertex
-    //the type of data in each component
-    //if data should be normalized
-    //how big each vertex is (3 floats/3 coordinates)
-    //add an offset of where data should start being read
-    //glVertexAttribPointer uses the VBO that is bound with GL_ARRAY_BUFFER and it reads from that
+    // Tell OpenGL how to read the vertex data from the VBO
+
+    // 0 = location in the vertex shader (layout(location = 0))
+    // 3 = number of values per vertex (x, y, z)
+    // GL_FLOAT = type of each value
+    // GL_FALSE = do NOT normalize the data
+    // 3 * sizeof(float) = size of one vertex (3 floats total)
+    // (void*)0 = start reading at the beginning of the data
+    // IMPORTANT: this uses the VBO currently bound to GL_ARRAY_BUFFER
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *) 0);
-    //since our vertex attribute is in location 0 we give it location 0
+
+    // Enable the vertex attribute at location 0 so OpenGL can use it
     glEnableVertexAttribArray(0);
 
+    // Unbind the VBO (optional, just to avoid accidental changes later)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    // remember: do NOT unbind the EBO while a VAO is active as the bound element buffer object IS stored in the VAO; keep the EBO bound.
+    // IMPORTANT:
+    // Do NOT unbind the EBO while the VAO is still bound
+    // The EBO is stored inside the VAO, so it needs to stay bound
 
-    //OpenGL is a state machine this has been set in memory and will stay until something else changes it
-    // we unbind it so we dont accidentally mess with it if were trying to change another buffer or VBO/VAO
+    // Unbind the VAO so we don’t accidentally modify it later
     glBindVertexArray(0);
 
     //render loop
@@ -192,9 +236,17 @@ int main() {
         //clear the buffer so you wont see previous frame (you have to specify which one)
         glClear(GL_COLOR_BUFFER_BIT);
 
+        float timeValue = glfwGetTime();
+        float greenValue = (sin(timeValue) / 2.0f) + 0.5f;
+        //you dont need the program to be called to find unifor but you do
+        //need it to be called before updating it
+        int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
         //call the program to start using it
         //every shader and rendering call will use this program object and shaders
         glUseProgram(shaderProgram);
+        //change color of vertex color through the unifor we made need to call progrm before changing it
+        glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+
         //call the configuration
         glBindVertexArray(VAO);
         // Draw triangles using the indices stored in the currently bound EBO (GL_ELEMENT_ARRAY_BUFFER)
@@ -202,6 +254,7 @@ int main() {
         // However, VAOs remember which EBO was bound when the VAO was created.
         // So simply binding the VAO automatically binds the right EBO, making rendering easier.
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
 
         glfwSwapBuffers(window); //swaps color buffer in window
         glfwPollEvents(); //processes events received in window and returns a response(if requested)
