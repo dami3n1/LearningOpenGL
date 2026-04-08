@@ -3,24 +3,7 @@
 #include <ostream>
 #include <glad/glad.h> //glad should always be put first to prevent redefinition use of OpenGL
 #include <GLFW/glfw3.h>
-
-const char *vertexShaderSource = "#version 330 core\n"
-        "layout (location = 0) in vec3 aPos;\n"
-        "layout (location = 1) in vec3 aColor;\n"
-        "out vec3 ourColor;\n"
-        "void main()\n"
-        "{\n"
-        "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-        "   ourColor = aColor;\n" // set ourColor to the input color we got from vertex data
-        "}\0";
-
-const char *fragmentShaderSource = "#version 330 core\n"
-        "out vec4 FragColor;\n"
-        "in vec3 ourColor;\n"
-        "void main()\n"
-        "{\n"
-        "   FragColor = vec4(ourColor, 1.0);\n"
-        "}\0";
+#include "shader_reader.h"
 
 const unsigned int SCREEN_HEIGHT = 600;
 const unsigned int SCREEN_WIDTH = 800;
@@ -73,85 +56,7 @@ int main() {
     //set glViewport so first frame renders correctly before hiting our resize function
     glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-    // This will store the ID (handle) for the vertex shader
-    unsigned int vertexShader;
-
-    // Create an empty vertex shader object and return its ID
-    vertexShader = glCreateShader(GL_VERTEX_SHADER);
-
-    // Give the shader its source code
-    // vertexShader = the shader object
-    // 1 = number of strings
-    // &vertexShaderSource = pointer to the shader code
-    // NULL = let OpenGL figure out string length
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-
-    // Compile the shader code
-    glCompileShader(vertexShader);
-
-    // Check if compilation was successful
-    int success;
-    char infoLog[512];
-
-    // Ask OpenGL for the compile status (success or fail)
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-
-    if (!success) {
-        // If it failed, get the error message
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cout << "ERROR::VERTEX SHADER COMPILATION FAILED\n" << infoLog << std::endl;
-    }
-
-    // Fragment Shader (same process)
-
-    // Store ID for fragment shader
-    unsigned int fragmentShader;
-
-    // Create fragment shader object
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-
-    // Give it source code
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-
-    // Compile it
-    glCompileShader(fragmentShader);
-
-    // Check if compilation worked
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-
-    if (!success) {
-        // Get error message if it failed
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        std::cout << "ERROR::FRAGMENT SHADER COMPILATION FAILED\n" << infoLog << std::endl;
-    }
-
-    // Shader Program
-
-    // Create a shader program (this links shaders together)
-    unsigned int shaderProgram;
-    shaderProgram = glCreateProgram();
-
-    // Attach both shaders to the program
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-
-    // Link the shaders into one complete program
-    glLinkProgram(shaderProgram);
-
-    // Check if linking was successful
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-
-    if (!success) {
-        // Get error message if linking failed
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER PROGRAM LINKING FAILED\n" << infoLog << std::endl;
-    }
-
-
-    // After linking, the individual shaders are no longer needed
-    // The program already has everything it needs
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+    Shader ourShader("../shaders/vertex.vs", "../shaders/fragment.fs");
 
     float vertices[] = {
         // positions         // colors
@@ -238,16 +143,8 @@ int main() {
         //clear the buffer so you wont see previous frame (you have to specify which one)
         glClear(GL_COLOR_BUFFER_BIT);
 
-        float timeValue = glfwGetTime();
-        float greenValue = (sin(timeValue) / 2.0f) + 0.5f;
-        //you dont need the program to be called to find unifor but you do
-        //need it to be called before updating it
-        //int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
-        //call the program to start using it
-        //every shader and rendering call will use this program object and shaders
-        glUseProgram(shaderProgram);
-        //change color of vertex color through the unifor we made need to call progrm before changing it
-        //glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+        //call shader program
+        ourShader.use();
 
         //call the configuration
         glBindVertexArray(VAO);
@@ -266,7 +163,6 @@ int main() {
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
-    glDeleteProgram(shaderProgram);
 
     //clean glfw resources;
     glfwTerminate();
