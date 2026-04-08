@@ -133,6 +133,8 @@ int main() {
     // Unbind the VAO so we don’t accidentally modify it later
     glBindVertexArray(0);
 
+
+
     //render loop
     while (!glfwWindowShouldClose(window)) {
         //input function called each frame
@@ -144,7 +146,9 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);
 
         //call shader program
+        //you have to call the program before triying to modify shader uniforms or anything relating to shdaer or shaderprogram
         ourShader.use();
+        ourShader.setInt("offset", 1);
 
         //call the configuration
         glBindVertexArray(VAO);
