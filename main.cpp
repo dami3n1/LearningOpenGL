@@ -6,18 +6,21 @@
 
 const char *vertexShaderSource = "#version 330 core\n"
         "layout (location = 0) in vec3 aPos;\n"
+        "layout (location = 1) in vec3 aColor;\n"
+        "out vec3 ourColor;\n"
         "void main()\n"
         "{\n"
         "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+        "   ourColor = aColor;\n" // set ourColor to the input color we got from vertex data
         "}\0";
 
 const char *fragmentShaderSource = "#version 330 core\n"
         "out vec4 FragColor;\n"
-        "uniform vec4 ourColor;"
+        "in vec3 ourColor;\n"
         "void main()\n"
         "{\n"
-        "   FragColor = ourColor;\n"
-        "}";
+        "   FragColor = vec4(ourColor, 1.0);\n"
+        "}\0";
 
 const unsigned int SCREEN_HEIGHT = 600;
 const unsigned int SCREEN_WIDTH = 800;
@@ -151,17 +154,11 @@ int main() {
     glDeleteShader(fragmentShader);
 
     float vertices[] = {
-        0.5f, 0.5f, 0.0f, // top right
-        0.5f, -0.5f, 0.0f, // bottom right
-        -0.5f, -0.5f, 0.0f, // bottom left
-        -0.5f, 0.5f, 0.0f // top left
-    };
-
-    unsigned int indices[] = {
-        // note that we start from 0!
-        0, 1, 3, // first Triangle
-        1, 2, 3 // second Triangle
-    };
+        // positions         // colors
+        0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
+       -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
+        0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top
+   };
 
     // VBO = stores the actual vertex data (like positions, colors, etc.)
     // VAO = remembers how to use that data (how OpenGL should read it)
@@ -197,9 +194,9 @@ int main() {
     //GL_DYNAMIC_DRAW: the data is changed a lot and used many times.
 
     //bind EBO and copy indicies into buffer like VBO
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     //more info look at VBO
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    //glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 
     // Tell OpenGL how to read the vertex data from the VBO
@@ -211,10 +208,15 @@ int main() {
     // 3 * sizeof(float) = size of one vertex (3 floats total)
     // (void*)0 = start reading at the beginning of the data
     // IMPORTANT: this uses the VBO currently bound to GL_ARRAY_BUFFER
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *) 0);
+    //read points from vertex data
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *) 0);
 
     // Enable the vertex attribute at location 0 so OpenGL can use it
     glEnableVertexAttribArray(0);
+
+    //read color from vertex data
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3*sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     // Unbind the VBO (optional, just to avoid accidental changes later)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -240,12 +242,12 @@ int main() {
         float greenValue = (sin(timeValue) / 2.0f) + 0.5f;
         //you dont need the program to be called to find unifor but you do
         //need it to be called before updating it
-        int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
+        //int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
         //call the program to start using it
         //every shader and rendering call will use this program object and shaders
         glUseProgram(shaderProgram);
         //change color of vertex color through the unifor we made need to call progrm before changing it
-        glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+        //glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
 
         //call the configuration
         glBindVertexArray(VAO);
@@ -253,7 +255,7 @@ int main() {
         // Normally, you'd have to bind the correct EBO for each object before calling glDrawElements.
         // However, VAOs remember which EBO was bound when the VAO was created.
         // So simply binding the VAO automatically binds the right EBO, making rendering easier.
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
 
 
         glfwSwapBuffers(window); //swaps color buffer in window
