@@ -4,6 +4,8 @@
 #include <glad/glad.h> //glad should always be put first to prevent redefinition use of OpenGL
 #include <GLFW/glfw3.h>
 #include "shader_reader.h"
+#define  STB_IMAGE_IMPLEMENTATION
+#include "ext/stb/stb_image.h"
 
 const unsigned int SCREEN_HEIGHT = 600;
 const unsigned int SCREEN_WIDTH = 800;
@@ -59,11 +61,17 @@ int main() {
     Shader ourShader("../shaders/vertex.vs", "../shaders/fragment.fs");
 
     float vertices[] = {
-        // positions         // colors
-        0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
-       -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
-        0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top
+        // positions          // colors           // texture coords
+        0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
+        0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
+       -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
+       -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left
    };
+
+    unsigned int indices[] = {
+        0, 1, 3, // first triangle
+        1, 2, 3  // second triangle
+    };
 
     // VBO = stores the actual vertex data (like positions, colors, etc.)
     // VAO = remembers how to use that data (how OpenGL should read it)
@@ -99,9 +107,9 @@ int main() {
     //GL_DYNAMIC_DRAW: the data is changed a lot and used many times.
 
     //bind EBO and copy indicies into buffer like VBO
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     //more info look at VBO
-    //glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 
     // Tell OpenGL how to read the vertex data from the VBO
@@ -114,17 +122,18 @@ int main() {
     // (void*)0 = start reading at the beginning of the data
     // IMPORTANT: this uses the VBO currently bound to GL_ARRAY_BUFFER
     //read points from vertex data
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *) 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *) 0);
 
     // Enable the vertex attribute at location 0 so OpenGL can use it
     glEnableVertexAttribArray(0);
 
     //read color from vertex data
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3*sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3*sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    // Unbind the VBO (optional, just to avoid accidental changes later)
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    //data for where to place texture
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6*sizeof(float)));
+    glEnableVertexAttribArray(2);
 
     // IMPORTANT:
     // Do NOT unbind the EBO while the VAO is still bound
@@ -133,6 +142,51 @@ int main() {
     // Unbind the VAO so we don’t accidentally modify it later
     glBindVertexArray(0);
 
+
+
+
+    //like objects textures are also refrenced by an ID
+    unsigned int texture;
+    glGenTextures(1, &texture);
+    //bind texture so any texture commands willl go to this texture
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    //s,t,r = x,y,z
+    //texture wrapping/filtering/mipmap options
+    //wrapping repeats the image horizontally and vertically
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    //linearly interpolates between the two mipmaps that most closely match the size of a pixel and samples the interpolated level via nearest neighbor interpolation.
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    //blends colors but no mipmap option (only works when downscaling)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    //use stbimage to read image data
+    int width, height, nrChannels; //stb fills this with data
+    unsigned char *data = stbi_load("../assets/container.jpg", &width, &height, &nrChannels, 0);
+
+    if (data) {
+        //target: generate texture on currently bound texture (GL_TEXTURE_2D)
+        //level( of detail(mipmap)): 0 = regular image
+        //format of color
+        //image size width and height
+        //border must be 0
+        //format of pixel data
+        //data type of pixel data
+        //pointer to the actual image data
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        //generate mipmaps
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else {
+        std::cout << "Failed to load texture" << std::endl;
+    }
+    //free the image from memory
+    stbi_image_free(data);
+
+
+    // Unbind the VBO (optional, just to avoid accidental changes later)
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     //render loop
     while (!glfwWindowShouldClose(window)) {
         //input function called each frame
@@ -143,6 +197,8 @@ int main() {
         //clear the buffer so you wont see previous frame (you have to specify which one)
         glClear(GL_COLOR_BUFFER_BIT);
 
+        glBindTexture(GL_TEXTURE_2D, texture);
+
         //call shader program
         ourShader.use();
 
@@ -152,7 +208,7 @@ int main() {
         // Normally, you'd have to bind the correct EBO for each object before calling glDrawElements.
         // However, VAOs remember which EBO was bound when the VAO was created.
         // So simply binding the VAO automatically binds the right EBO, making rendering easier.
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 
         glfwSwapBuffers(window); //swaps color buffer in window

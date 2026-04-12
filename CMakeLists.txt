@@ -20,7 +20,8 @@ FetchContent_MakeAvailable(glfw)
 find_package(OpenGL REQUIRED)
 
 # Create GLAD static library
-add_library(glad STATIC ext/glad/src/glad.c)
+add_library(glad STATIC ext/glad/src/glad.c
+        ext/stb/stb_image.h)
 
 # Tell CMake where headers are
 target_include_directories(glad PUBLIC ext/glad/include)
