@@ -17,10 +17,26 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
+// stores how much we're seeing of either texture
+float mixValue = 0.2f;
+
 void processInput(GLFWwindow *window)
 {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) // if it's not pressed, glfwGetKey returns GLFW_RELEASE
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+    {
+        mixValue += 0.02f; // change this value accordingly (might be too slow or too fast based on system hardware)
+        if(mixValue >= 1.0f)
+            mixValue = 1.0f;
+    }
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+    {
+        mixValue -= 0.02f; // change this value accordingly (might be too slow or too fast based on system hardware)
+        if (mixValue <= 0.0f)
+            mixValue = 0.0f;
+    }
 }
 
 int main()
@@ -238,11 +254,11 @@ stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded textu
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
 
+        // set the texture mix value in the shader
+        ourShader.setFloat("mixValue", mixValue);
+
         // call shader program
         ourShader.use();
-
-        
-        ourShader.setFloat("mixValue", (sin(glfwGetTime()) / 2.0f) + 0.5f); // changes the mix value over time to create a blending effect
 
         // call the configuration
         glBindVertexArray(VAO);
