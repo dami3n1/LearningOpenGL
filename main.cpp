@@ -31,7 +31,7 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
     {
         mixValue += 0.02f; // change this value accordingly (might be too slow or too fast based on system hardware)
-        if(mixValue >= 1.0f)
+        if (mixValue >= 1.0f)
             mixValue = 1.0f;
     }
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
@@ -182,9 +182,15 @@ int main()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     // use stbimage to read image data
-    int width, height, nrChannels;          // stb fills this with data
-    
+    int width, height, nrChannels; // stb fills this with data
+
     unsigned char *data = stbi_load("../assets/container.jpg", &width, &height, &nrChannels, 0);
+
+    glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f); // vector we are going to transform
+    glm::mat4 trans = glm::mat4(1.0f); // 4x4 matrix with all serozs except diagonal as 0
+    trans = glm::translate(trans, glm::vec3(1.0f, 1.0f, 0.0f)); // translate the matrix by (1, 1, 0)
+    vec = trans * vec; // apply the transformation to the vector
+    std::cout << vec.x << vec.y << vec.z << std::endl; // output solution
 
     if (data)
     {
@@ -217,7 +223,7 @@ int main()
     // set texture filtering parameters
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
+    stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
     // load image, create texture and generate mipmaps
     data = stbi_load("../assets/awesomeface.png", &width, &height, &nrChannels, 0);
     if (data)
