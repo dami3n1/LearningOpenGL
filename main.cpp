@@ -186,12 +186,6 @@ int main()
 
     unsigned char *data = stbi_load("../assets/container.jpg", &width, &height, &nrChannels, 0);
 
-    glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f); // vector we are going to transform
-    glm::mat4 trans = glm::mat4(1.0f); // 4x4 matrix with all serozs except diagonal as 0
-    trans = glm::translate(trans, glm::vec3(1.0f, 1.0f, 0.0f)); // translate the matrix by (1, 1, 0)
-    vec = trans * vec; // apply the transformation to the vector
-    std::cout << vec.x << vec.y << vec.z << std::endl; // output solution
-
     if (data)
     {
         // target: generate texture on currently bound texture (GL_TEXTURE_2D)
@@ -243,6 +237,13 @@ int main()
     ourShader.use(); // don't forget to activate/use the shader before setting uniforms!
     ourShader.setInt("texture1", 0);
     ourShader.setInt("texture2", 1);
+
+    glm::mat4 trans = glm::mat4(1.0f); // initialize to identity matrix
+    trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)); // rotate the matrix by 90 degrees around the z-axis
+    trans = glm::scale(trans, glm::vec3(0.5f, 0.5f, 0.5f)); // scale the matrix to 50% of its original size
+
+    unsigned int transformLoc = glGetUniformLocation(ourShader.ID, "transform"); // get the location of the "transform" uniform in the shader program
+    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans)); // set the value of the "transform" uniform to the transformation matrix we created (
 
     // Unbind the VBO (optional, just to avoid accidental changes later)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
