@@ -19,6 +19,9 @@ FetchContent_MakeAvailable(glfw)
 #find openGL
 find_package(OpenGL REQUIRED)
 
+#find glm
+add_subdirectory(ext/glm-1.0.3)
+
 # Create GLAD static library
 add_library(glad STATIC ext/glad/src/glad.c
         ext/stb/stb_image.h)
@@ -31,4 +34,4 @@ add_executable(MyApp main.cpp
         shader_reader.h)
 
 set(GLFW_BUILD_SHARED_LIBS OFF CACHE BOOL "Build GLFW as static library")
-target_link_libraries(MyApp PRIVATE glfw glad OpenGL::GL)
+target_link_libraries(MyApp PRIVATE glfw glad glm::glm OpenGL::GL)

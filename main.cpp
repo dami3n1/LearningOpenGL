@@ -6,6 +6,9 @@
 #include "shader_reader.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "ext/stb/stb_image.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 const unsigned int SCREEN_HEIGHT = 600;
 const unsigned int SCREEN_WIDTH = 800;
