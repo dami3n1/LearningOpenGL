@@ -263,12 +263,12 @@ int main()
         // call shader program
         ourShader.use();
 
-        glm::mat4 trans = glm::mat4(1.0f);                                             // initialize to identity matrix
-        trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));                   // translate the matrix by (0.5, -0.5, 0.0) (move it to the right and down)
-        trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f)); // rotate the matrix by the current time (in radians) around the z-axis
+        glm::mat4 transform = glm::mat4(1.0f);                                             // initialize to identity matrix
+        transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));                   // translate the matrix by (0.5, -0.5, 0.0) (move it to the right and down)
+        transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f)); // rotate the matrix by the current time (in radians) around the z-axis
 
         unsigned int transformLoc = glGetUniformLocation(ourShader.ID, "transform"); // get the location of the "transform" uniform in the shader program
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));        // set the value of the "transform" uniform to the transformation matrix we created
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));        // set the value of the "transform" uniform to the transformation matrix we created
 
         // call the configuration
         glBindVertexArray(VAO);
@@ -276,6 +276,15 @@ int main()
         // Normally, you'd have to bind the correct EBO for each object before calling glDrawElements.
         // However, VAOs remember which EBO was bound when the VAO was created.
         // So simply binding the VAO automatically binds the right EBO, making rendering easier.
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+        // second transformation
+        // ---------------------
+        transform = glm::mat4(1.0f); // reset it to identity matrix
+        transform = glm::translate(transform, glm::vec3(-0.5f, 0.5f, 0.0f));
+        float scaleAmount = static_cast<float>(sin(glfwGetTime()));
+        transform = glm::scale(transform, glm::vec3(scaleAmount, scaleAmount, scaleAmount));
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, &transform[0][0]); // this time take the matrix value array's first element as its memory pointer value
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window); // swaps color buffer in window
