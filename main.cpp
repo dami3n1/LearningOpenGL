@@ -238,13 +238,6 @@ int main()
     ourShader.setInt("texture1", 0);
     ourShader.setInt("texture2", 1);
 
-    glm::mat4 trans = glm::mat4(1.0f); // initialize to identity matrix
-    trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)); // rotate the matrix by 90 degrees around the z-axis
-    trans = glm::scale(trans, glm::vec3(0.5f, 0.5f, 0.5f)); // scale the matrix to 50% of its original size
-
-    unsigned int transformLoc = glGetUniformLocation(ourShader.ID, "transform"); // get the location of the "transform" uniform in the shader program
-    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans)); // set the value of the "transform" uniform to the transformation matrix we created (
-
     // Unbind the VBO (optional, just to avoid accidental changes later)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     // render loop
@@ -269,6 +262,13 @@ int main()
 
         // call shader program
         ourShader.use();
+
+        glm::mat4 trans = glm::mat4(1.0f);                                             // initialize to identity matrix
+        trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));                   // translate the matrix by (0.5, -0.5, 0.0) (move it to the right and down)
+        trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f)); // rotate the matrix by the current time (in radians) around the z-axis
+
+        unsigned int transformLoc = glGetUniformLocation(ourShader.ID, "transform"); // get the location of the "transform" uniform in the shader program
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));        // set the value of the "transform" uniform to the transformation matrix we created
 
         // call the configuration
         glBindVertexArray(VAO);
