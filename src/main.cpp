@@ -20,12 +20,7 @@ const unsigned int SCREEN_HEIGHT = 600;
 const unsigned int SCREEN_WIDTH = 800;
 float deltaTime;
 
-// glfw will autoatically fill in data
-void framebuffer_size_callback(GLFWwindow *window, int width, int height)
-{
-    // set viewport sie for opengl you can make this smaller than the window size and render stuff behind it
-    glViewport(0, 0, width, height);
-}
+
 
 void printGamepadState(int jid)
 {
@@ -93,36 +88,15 @@ void processInput(GLFWwindow *window)
     mixValue = std::clamp(mixValue, 0.0f, 1.0f);
 }
 
-glfw_init glfwInitializer;
+
 
 
 int main()
 {
     
+    glfw_init glfwInitializer;
     
-    
-    // create window object
-    // define how window should be set up and creates it
-    GLFWwindow *window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "OpenGL", NULL, NULL);
-    if (window == NULL)
-    {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-    // makes a context for the window and assigns to it
-    glfwMakeContextCurrent(window);
-    // tell glfw to call function when window resize; glfw will autoatically fill in data for framebuffer_size_callback
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
-    // initialize GLAD before we can use any opengl functions
-    // cast's the glfw function which gives the OS specific function for GLAD to find
-    // the OpenGL function pointer (memory address of opengl executable command)(hardware specific)
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    }
+    GLFWwindow* window = glfwInitializer.makeWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "OpenGL");
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();

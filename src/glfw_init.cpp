@@ -1,14 +1,20 @@
-#include "glfw_init.h"
 #include <glad/glad.h> //glad should always be put first to prevent redefinition use of OpenGL
 #include <GLFW/glfw3.h>
-#include <iostream>
+#include "glfw_init.h"
+#include "logger.h"
+
+// glfw will autoatically fill in data
+void framebuffer_size_callback(GLFWwindow *window, int width, int height)
+{
+    // set viewport sie for opengl you can make this smaller than the window size and render stuff behind it
+    glViewport(0, 0, width, height);
+}
 
 glfw_init::glfw_init()
 {
     if (!glfwInit()) // Initiates glfw (returns GL_TRUE if successfull)
     {
-        std::cout << "Failed to initialize GLFW" << std::endl;
-        return;
+        logger(ERROR, "Failed to initialize GLFW");
     }
 
     // configure the next glfwCreateWindow() with glfwWindowHint();
@@ -22,8 +28,36 @@ glfw_init::glfw_init()
 #endif
 }
 
+GLFWwindow* glfw_init::makeWindow(int screenWidth, int screenHeight, const char* title)
+{
+    // create window object
+    // define how window should be set up and creates it
+    GLFWwindow *window = glfwCreateWindow(screenWidth, screenHeight, title, NULL, NULL);
+    if (window == NULL)
+    {
+        logger(ERROR, "Failed to create GLFW window");
+        glfwTerminate();
+        return nullptr;
+    }
+    // makes a context for the window and assigns to it
+    glfwMakeContextCurrent(window);
+    // tell glfw to call function when window resize; glfw will autoatically fill in data for framebuffer_size_callback
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+    // initialize GLAD before we can use any opengl functions
+    // cast's the glfw function which gives the OS specific function for GLAD to find
+    // the OpenGL function pointer (memory address of opengl executable command)(hardware specific)
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    {
+        logger(ERROR, "Failed to initialize GLAD");
+    }
+
+    return window;
+}
+
 glfw_init::~glfw_init()
 {
+    logger(WARN, "Terminating GLFW");
     // clean glfw resources;
     glfwTerminate();
 }
