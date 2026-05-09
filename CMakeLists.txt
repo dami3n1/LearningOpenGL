@@ -49,7 +49,10 @@ add_library(glad STATIC ext/glad/src/glad.c
 # Tell CMake where headers are
 target_include_directories(glad PUBLIC ext/glad/include)
 
-file(GLOB SOURCES "*.cpp")
+file(GLOB_RECURSE SOURCES
+    "${CMAKE_SOURCE_DIR}/src/*.cpp"
+)
+
 add_executable(MyApp ${SOURCES})
 
 set(GLFW_BUILD_SHARED_LIBS OFF CACHE BOOL "Build GLFW as static library")

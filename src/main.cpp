@@ -2,11 +2,10 @@
 #include <iostream>
 #include <iomanip>
 #include <ostream>
-#include <glad/glad.h> //glad should always be put first to prevent redefinition use of OpenGL
-#include <GLFW/glfw3.h>
+
 #include "shader_reader.h"
 #define STB_IMAGE_IMPLEMENTATION
-#include "ext/stb/stb_image.h"
+#include "../ext/stb/stb_image.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -15,6 +14,7 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include "glfw_init.h"
 
 const unsigned int SCREEN_HEIGHT = 600;
 const unsigned int SCREEN_WIDTH = 800;
@@ -93,20 +93,14 @@ void processInput(GLFWwindow *window)
     mixValue = std::clamp(mixValue, 0.0f, 1.0f);
 }
 
+glfw_init glfwInitializer;
+
+
 int main()
 {
-    glfwInit(); // Initiates glfw (returns GL_TRUE if successfull)
-
-    // configure the next glfwCreateWindow() with glfwWindowHint();
-    // tells glfw what OpenGL Version will be used Program will crash if client does not have proper version
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-#ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-
+    
+    
+    
     // create window object
     // define how window should be set up and creates it
     GLFWwindow *window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "OpenGL", NULL, NULL);
@@ -303,7 +297,7 @@ int main()
     // Detect connected controllers
     for (int jid = GLFW_JOYSTICK_1; jid <= GLFW_JOYSTICK_LAST; jid++)
     {
-        if (glfwJoystickPresent(jid))
+        if (controller.isConnected())
         {
             std::cout << "Connected: "
                       << glfwGetJoystickName(jid)
@@ -315,6 +309,8 @@ int main()
             }
         }
     }
+
+    
 
     float lastFrame = 0.0f;
 
@@ -333,7 +329,12 @@ int main()
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-        ImGui::ShowDemoWindow(); // Show demo window! :)
+
+        ImGui::Begin("My Window");
+
+        ImGui::Text("Texture transparency: %.2f", mixValue);
+
+        ImGui::End();
 
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
@@ -400,7 +401,6 @@ int main()
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
 
-    // clean glfw resources;
-    glfwTerminate();
+    
     return 0;
 }
