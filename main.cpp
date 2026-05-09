@@ -11,9 +11,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "controller.h"
+#include <algorithm>
 
 const unsigned int SCREEN_HEIGHT = 600;
 const unsigned int SCREEN_WIDTH = 800;
+float deltaTime;
 
 // glfw will autoatically fill in data
 void framebuffer_size_callback(GLFWwindow *window, int width, int height)
@@ -53,6 +55,8 @@ void printGamepadState(int jid)
 
 // stores how much we're seeing of either texture
 float mixValue = 0.2f;
+Controller controller;
+
 
 void processInput(GLFWwindow *window)
 {
@@ -71,6 +75,21 @@ void processInput(GLFWwindow *window)
         if (mixValue <= 0.0f)
             mixValue = 0.0f;
     }
+
+    
+    Vec2 left = controller.leftStick();
+
+    float speed = 1.5f;
+    float deadzone = 0.2f;
+
+    float inputY = left.y;
+
+    if (fabs(inputY) < deadzone)
+        inputY = 0.0f;
+
+    mixValue += (-inputY) * speed * deltaTime;
+
+    mixValue = std::clamp(mixValue, 0.0f, 1.0f);
 }
 
 int main()
@@ -285,6 +304,8 @@ int main()
         }
     }
 
+    float lastFrame = 0.0f;
+
     // Unbind the VBO (optional, just to avoid accidental changes later)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     // render loop
@@ -293,22 +314,12 @@ int main()
         glfwPollEvents(); // processes events received in window and returns a response(if requested)
         // input function called each frame
         processInput(window);
-        
-        Controller controller;
+
+        float currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
         controller.update();
-
-        if (controller.isConnected())
-        {
-            auto ls = controller.leftStick();
-
-            if (controller.A())
-            {
-                std::cout << "A pressed\n";
-            }
-
-            std::cout << "Left stick: "
-                      << ls.x << ", " << ls.y << "\n";
-        }
 
         // glClear uses this color to clear the screen (sets it doesnt have to be called always)
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
