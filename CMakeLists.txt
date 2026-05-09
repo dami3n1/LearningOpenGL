@@ -29,9 +29,8 @@ add_library(glad STATIC ext/glad/src/glad.c
 # Tell CMake where headers are
 target_include_directories(glad PUBLIC ext/glad/include)
 
-# ---- Build executable ----
-add_executable(MyApp main.cpp
-        shader_reader.h)
+file(GLOB SOURCES "*.cpp")
+add_executable(MyApp ${SOURCES})
 
 set(GLFW_BUILD_SHARED_LIBS OFF CACHE BOOL "Build GLFW as static library")
 target_link_libraries(MyApp PRIVATE glfw glad glm::glm OpenGL::GL)

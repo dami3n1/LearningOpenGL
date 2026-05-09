@@ -1,5 +1,6 @@
 #include <cmath>
 #include <iostream>
+#include <iomanip>
 #include <ostream>
 #include <glad/glad.h> //glad should always be put first to prevent redefinition use of OpenGL
 #include <GLFW/glfw3.h>
@@ -9,6 +10,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include "controller.h"
 
 const unsigned int SCREEN_HEIGHT = 600;
 const unsigned int SCREEN_WIDTH = 800;
@@ -18,6 +20,35 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
     // set viewport sie for opengl you can make this smaller than the window size and render stuff behind it
     glViewport(0, 0, width, height);
+}
+
+void printGamepadState(int jid)
+{
+    GLFWgamepadstate state;
+
+    if (glfwGetGamepadState(jid, &state))
+    {
+        // Buttons
+        std::cout << "\nButtons:\n";
+
+        for (int i = 0; i <= GLFW_GAMEPAD_BUTTON_LAST; i++)
+        {
+            std::cout << "Button " << i << ": "
+                      << (state.buttons[i] == GLFW_PRESS ? "Pressed" : "Released")
+                      << "\n";
+        }
+
+        // Axes
+        std::cout << "\nAxes:\n";
+
+        for (int i = 0; i <= GLFW_GAMEPAD_AXIS_LAST; i++)
+        {
+            std::cout << "Axis " << i << ": "
+                      << std::fixed << std::setprecision(2)
+                      << state.axes[i]
+                      << "\n";
+        }
+    }
 }
 
 // stores how much we're seeing of either texture
@@ -238,13 +269,46 @@ int main()
     ourShader.setInt("texture1", 0);
     ourShader.setInt("texture2", 1);
 
+    // Detect connected controllers
+    for (int jid = GLFW_JOYSTICK_1; jid <= GLFW_JOYSTICK_LAST; jid++)
+    {
+        if (glfwJoystickPresent(jid))
+        {
+            std::cout << "Connected: "
+                      << glfwGetJoystickName(jid)
+                      << "\n";
+
+            if (glfwJoystickIsGamepad(jid))
+            {
+                std::cout << "Recognized as gamepad.\n";
+            }
+        }
+    }
+
     // Unbind the VBO (optional, just to avoid accidental changes later)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     // render loop
     while (!glfwWindowShouldClose(window))
     {
+        glfwPollEvents(); // processes events received in window and returns a response(if requested)
         // input function called each frame
         processInput(window);
+        
+        Controller controller;
+        controller.update();
+
+        if (controller.isConnected())
+        {
+            auto ls = controller.leftStick();
+
+            if (controller.A())
+            {
+                std::cout << "A pressed\n";
+            }
+
+            std::cout << "Left stick: "
+                      << ls.x << ", " << ls.y << "\n";
+        }
 
         // glClear uses this color to clear the screen (sets it doesnt have to be called always)
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -263,12 +327,12 @@ int main()
         // call shader program
         ourShader.use();
 
-        glm::mat4 transform = glm::mat4(1.0f);                                             // initialize to identity matrix
+        glm::mat4 transform = glm::mat4(1.0f);                                                 // initialize to identity matrix
         transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));                   // translate the matrix by (0.5, -0.5, 0.0) (move it to the right and down)
         transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f)); // rotate the matrix by the current time (in radians) around the z-axis
 
         unsigned int transformLoc = glGetUniformLocation(ourShader.ID, "transform"); // get the location of the "transform" uniform in the shader program
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));        // set the value of the "transform" uniform to the transformation matrix we created
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));    // set the value of the "transform" uniform to the transformation matrix we created
 
         // call the configuration
         glBindVertexArray(VAO);
@@ -280,15 +344,14 @@ int main()
 
         // second transformation
         // ---------------------
-        transform = glm::mat4(1.0f); // reset it to identity matrix
-        transform = glm::translate(transform, glm::vec3(-0.5f, 0.5f, 0.0f));
-        float scaleAmount = static_cast<float>(sin(glfwGetTime()));
-        transform = glm::scale(transform, glm::vec3(scaleAmount, scaleAmount, scaleAmount));
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, &transform[0][0]); // this time take the matrix value array's first element as its memory pointer value
+        transform = glm::mat4(1.0f);                                                         // reset it to identity matrix
+        transform = glm::translate(transform, glm::vec3(-0.5f, 0.5f, 0.0f));                 // translate the matrix by (-0.5, 0.5, 0.0) (move it to the left and up)
+        float scaleAmount = static_cast<float>(sin(glfwGetTime()));                          // calculate a scale factor that oscillates between 0.0 and 1.0 based on the sine of the current time
+        transform = glm::scale(transform, glm::vec3(scaleAmount, scaleAmount, scaleAmount)); // scale the matrix by the calculated scale factor
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, &transform[0][0]);                     // this time take the matrix value array's first element as its memory pointer value
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window); // swaps color buffer in window
-        glfwPollEvents();        // processes events received in window and returns a response(if requested)
     }
 
     // de allocated resources after usage
