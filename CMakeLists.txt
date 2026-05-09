@@ -13,8 +13,28 @@ FetchContent_Declare(
     GIT_TAG        3.4   # or latest stable release
 )
 
+FetchContent_Declare(
+    imgui
+    GIT_REPOSITORY https://github.com/ocornut/imgui.git
+    GIT_TAG        v1.92.7   # or latest stable release
+)
+
 # Make the content available
 FetchContent_MakeAvailable(glfw)
+FetchContent_MakeAvailable(imgui)
+
+file(GLOB IMGUI_SOURCES
+    ${imgui_SOURCE_DIR}/*.cpp
+    ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
+    ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
+)
+
+add_library(imgui STATIC ${IMGUI_SOURCES})
+
+target_include_directories(imgui PUBLIC
+    ${imgui_SOURCE_DIR}
+    ${imgui_SOURCE_DIR}/backends
+)
 
 #find openGL
 find_package(OpenGL REQUIRED)
@@ -33,4 +53,4 @@ file(GLOB SOURCES "*.cpp")
 add_executable(MyApp ${SOURCES})
 
 set(GLFW_BUILD_SHARED_LIBS OFF CACHE BOOL "Build GLFW as static library")
-target_link_libraries(MyApp PRIVATE glfw glad glm::glm OpenGL::GL)
+target_link_libraries(MyApp PRIVATE glfw glad glm::glm OpenGL::GL imgui)

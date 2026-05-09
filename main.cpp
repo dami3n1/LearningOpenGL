@@ -12,6 +12,9 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "controller.h"
 #include <algorithm>
+#include <imgui.h>
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 
 const unsigned int SCREEN_HEIGHT = 600;
 const unsigned int SCREEN_WIDTH = 800;
