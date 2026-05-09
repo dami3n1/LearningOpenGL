@@ -13,8 +13,8 @@
 #include "controller.h"
 #include <algorithm>
 #include <imgui.h>
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
 
 const unsigned int SCREEN_HEIGHT = 600;
 const unsigned int SCREEN_WIDTH = 800;
@@ -60,7 +60,6 @@ void printGamepadState(int jid)
 float mixValue = 0.2f;
 Controller controller;
 
-
 void processInput(GLFWwindow *window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -79,7 +78,6 @@ void processInput(GLFWwindow *window)
             mixValue = 0.0f;
     }
 
-    
     Vec2 left = controller.leftStick();
 
     float speed = 1.5f;
@@ -131,6 +129,17 @@ int main()
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
+
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO &io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
+
+    // Setup Platform/Renderer backends
+    ImGui_ImplGlfw_InitForOpenGL(window, true); // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
+    ImGui_ImplOpenGL3_Init();
 
     // set glViewport so first frame renders correctly before hiting our resize function
     glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -318,6 +327,14 @@ int main()
         // input function called each frame
         processInput(window);
 
+        // (Your code calls glfwPollEvents())
+        // ...
+        // Start the Dear ImGui frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        ImGui::ShowDemoWindow(); // Show demo window! :)
+
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
@@ -365,8 +382,18 @@ int main()
         glUniformMatrix4fv(transformLoc, 1, GL_FALSE, &transform[0][0]);                     // this time take the matrix value array's first element as its memory pointer value
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
+        // Rendering
+        // (Your code clears your framebuffer, renders your other stuff etc.)
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        // (Your code calls glfwSwapBuffers() etc.)
+
         glfwSwapBuffers(window); // swaps color buffer in window
     }
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 
     // de allocated resources after usage
     glDeleteVertexArrays(1, &VAO);
