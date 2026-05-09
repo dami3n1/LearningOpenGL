@@ -14,42 +14,13 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
-#include "glfw_init.h"
+#include "windowSystem.h"
+#include "logger.h"
 
 const unsigned int SCREEN_HEIGHT = 600;
 const unsigned int SCREEN_WIDTH = 800;
 float deltaTime;
 
-
-
-void printGamepadState(int jid)
-{
-    GLFWgamepadstate state;
-
-    if (glfwGetGamepadState(jid, &state))
-    {
-        // Buttons
-        std::cout << "\nButtons:\n";
-
-        for (int i = 0; i <= GLFW_GAMEPAD_BUTTON_LAST; i++)
-        {
-            std::cout << "Button " << i << ": "
-                      << (state.buttons[i] == GLFW_PRESS ? "Pressed" : "Released")
-                      << "\n";
-        }
-
-        // Axes
-        std::cout << "\nAxes:\n";
-
-        for (int i = 0; i <= GLFW_GAMEPAD_AXIS_LAST; i++)
-        {
-            std::cout << "Axis " << i << ": "
-                      << std::fixed << std::setprecision(2)
-                      << state.axes[i]
-                      << "\n";
-        }
-    }
-}
 
 // stores how much we're seeing of either texture
 float mixValue = 0.2f;
@@ -88,15 +59,30 @@ void processInput(GLFWwindow *window)
     mixValue = std::clamp(mixValue, 0.0f, 1.0f);
 }
 
-
-
-
 int main()
 {
-    
-    glfw_init glfwInitializer;
-    
-    GLFWwindow* window = glfwInitializer.makeWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "OpenGL");
+
+    if (!windowSystem::glfw_init())
+    {
+        logger(ERROR, "windowSystem::Failed to initialize GLFW");
+        return -1; // or stop engine
+    }
+    GLFWwindow *window = windowSystem::makeWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "OpenGL Window");
+    if (!window)
+    {
+        logger(ERROR, "windowSystem::Failed to create GLFW window");
+        windowSystem::glfw_shutdown();
+        return -1;
+    }
+
+    // initialize GLAD before we can use any opengl functions
+    // cast's the glfw function which gives the OS specific function for GLAD to find
+    // the OpenGL function pointer (memory address of opengl executable command)(hardware specific)
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    {
+        logger(ERROR, "Failed to initialize GLAD");
+        return -1;
+    }
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -284,8 +270,6 @@ int main()
         }
     }
 
-    
-
     float lastFrame = 0.0f;
 
     // Unbind the VBO (optional, just to avoid accidental changes later)
@@ -375,6 +359,7 @@ int main()
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
 
-    
+    windowSystem::glfw_shutdown();
+
     return 0;
 }

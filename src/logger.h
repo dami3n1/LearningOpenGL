@@ -16,7 +16,7 @@ enum LogLevel
     FATAL
 };
 
-bool logToFileEnabled = false;
+inline bool logToFileEnabled = false;
 
 // cololrs for console output
 inline std::string getColor(LogLevel level)
