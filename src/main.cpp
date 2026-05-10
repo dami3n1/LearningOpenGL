@@ -16,6 +16,7 @@
 #include <imgui_impl_opengl3.h>
 #include "windowSystem.h"
 #include "logger.h"
+#include "imguiLayer.h"
 
 const unsigned int SCREEN_HEIGHT = 600;
 const unsigned int SCREEN_WIDTH = 800;
@@ -84,19 +85,16 @@ int main()
         return -1;
     }
 
-    // Setup Dear ImGui context
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO &io = ImGui::GetIO();
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
-
-    // Setup Platform/Renderer backends
-    ImGui_ImplGlfw_InitForOpenGL(window, true); // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
-    ImGui_ImplOpenGL3_Init();
-
     // set glViewport so first frame renders correctly before hiting our resize function
     glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+    if (!imguiLayer::imguiSetup(window))
+    {
+        logger(ERROR, "Failed to initialize ImGui");
+        return -1;
+    }
+
+    
 
     Shader ourShader("../shaders/vertex.vs", "../shaders/fragment.fs");
 
@@ -281,18 +279,8 @@ int main()
         // input function called each frame
         processInput(window);
 
-        // (Your code calls glfwPollEvents())
-        // ...
-        // Start the Dear ImGui frame
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-
-        ImGui::Begin("My Window");
-
-        ImGui::Text("Texture transparency: %.2f", mixValue);
-
-        ImGui::End();
+        imguiLayer::imguiRender();
+        imguiLayer::customWindow1(mixValue);
 
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
@@ -350,9 +338,7 @@ int main()
         glfwSwapBuffers(window); // swaps color buffer in window
     }
 
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
+    imguiLayer::Shutdown();
 
     // de allocated resources after usage
     glDeleteVertexArrays(1, &VAO);
