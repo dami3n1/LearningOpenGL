@@ -1,4 +1,5 @@
 #include "controller.h"
+#include "logger.h"
 
 Controller::Controller(int joystickID)
 {
@@ -17,6 +18,24 @@ void Controller::update()
     axes = glfwGetJoystickAxes(jid, &axisCount);
     buttons = glfwGetJoystickButtons(jid, &buttonCount);
 }
+
+void Controller::showControllers()
+{
+    // Detect connected controllers
+    for (int jid = GLFW_JOYSTICK_1; jid <= GLFW_JOYSTICK_LAST; jid++)
+    {
+        if (glfwJoystickPresent(jid))
+        {
+            logger(INFO, "Connected: " + std::string(glfwGetJoystickName(jid)));
+
+            if (glfwJoystickIsGamepad(jid))
+            {
+                logger(INFO, "Recognized as gamepad.");
+            }
+        }
+    }
+}
+
 
 bool Controller::isConnected() const
 {

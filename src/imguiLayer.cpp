@@ -29,12 +29,12 @@ void imguiLayer::imguiRender()
     ImGui_ImplGlfw_NewFrame();
 }
 
-void imguiLayer::customWindow1(int mixValue)
+void imguiLayer::customWindow1(float mixtureValue)
 {
     ImGui::NewFrame();
     ImGui::Begin("My Window");
 
-    ImGui::Text("Texture transparency: %.2f", mixValue);
+    ImGui::Text("Texture transparency: %.2f", mixtureValue);
 
     ImGui::End();
     // Rendering

@@ -252,21 +252,7 @@ int main()
     ourShader.setInt("texture1", 0);
     ourShader.setInt("texture2", 1);
 
-    // Detect connected controllers
-    for (int jid = GLFW_JOYSTICK_1; jid <= GLFW_JOYSTICK_LAST; jid++)
-    {
-        if (controller.isConnected())
-        {
-            std::cout << "Connected: "
-                      << glfwGetJoystickName(jid)
-                      << "\n";
-
-            if (glfwJoystickIsGamepad(jid))
-            {
-                std::cout << "Recognized as gamepad.\n";
-            }
-        }
-    }
+    controller.showControllers();
 
     float lastFrame = 0.0f;
 

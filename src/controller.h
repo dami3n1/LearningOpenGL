@@ -13,6 +13,7 @@ public:
 
     void update();
     bool isConnected() const;
+    void showControllers();
 
     // Buttons (Xbox layout)
     bool A() const;
