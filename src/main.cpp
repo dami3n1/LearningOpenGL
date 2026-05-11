@@ -60,6 +60,48 @@ void processInput(GLFWwindow *window)
     mixValue = std::clamp(mixValue, 0.0f, 1.0f);
 }
 
+void texturmaker(GLuint &texture, const char* path, GLenum format) {
+     glGenTextures(1, &texture);
+    // bind texture so any texture commands willl go to this texture
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    // s,t,r = x,y,z
+    // texture wrapping/filtering/mipmap options
+    // wrapping repeats the image horizontally and vertically
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // linearly interpolates between the two mipmaps that most closely match the size of a pixel and samples the interpolated level via nearest neighbor interpolation.
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    // blends colors but no mipmap option (only works when downscaling)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // use stbimage to read image data
+
+    int width, height, nrChannels; // stb fills this with data
+
+    unsigned char *data = stbi_load(path, &width, &height, &nrChannels, 0);
+
+    if (data)
+    {
+        // target: generate texture on currently bound texture (GL_TEXTURE_2D)
+        // level( of detail(mipmap)): 0 = regular image
+        // format of color
+        // image size width and height
+        // border must be 0
+        // format of pixel data
+        // data type of pixel data
+        // pointer to the actual image data
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        // generate mipmaps
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cout << "Failed to load texture" << std::endl;
+    }
+    // free the image from memory
+    stbi_image_free(data);
+}
+
 int main()
 {
 
@@ -181,70 +223,10 @@ int main()
 
     // like objects textures are also refrenced by an ID
     unsigned int texture1, texture2;
-    glGenTextures(1, &texture1);
-    // bind texture so any texture commands willl go to this texture
-    glBindTexture(GL_TEXTURE_2D, texture1);
+   
+    texturmaker(texture1, "../assets/container.jpg", GL_RGB);
 
-    // s,t,r = x,y,z
-    // texture wrapping/filtering/mipmap options
-    // wrapping repeats the image horizontally and vertically
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    // linearly interpolates between the two mipmaps that most closely match the size of a pixel and samples the interpolated level via nearest neighbor interpolation.
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    // blends colors but no mipmap option (only works when downscaling)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // use stbimage to read image data
-    int width, height, nrChannels; // stb fills this with data
-
-    unsigned char *data = stbi_load("../assets/container.jpg", &width, &height, &nrChannels, 0);
-
-    if (data)
-    {
-        // target: generate texture on currently bound texture (GL_TEXTURE_2D)
-        // level( of detail(mipmap)): 0 = regular image
-        // format of color
-        // image size width and height
-        // border must be 0
-        // format of pixel data
-        // data type of pixel data
-        // pointer to the actual image data
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        // generate mipmaps
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else
-    {
-        std::cout << "Failed to load texture" << std::endl;
-    }
-    // free the image from memory
-    stbi_image_free(data);
-
-    // texture 2
-    // ---------
-    glGenTextures(1, &texture2);
-    glBindTexture(GL_TEXTURE_2D, texture2);
-    // set the texture wrapping parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // set texture wrapping to GL_REPEAT (default wrapping method)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    // set texture filtering parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
-    // load image, create texture and generate mipmaps
-    data = stbi_load("../assets/awesomeface.png", &width, &height, &nrChannels, 0);
-    if (data)
-    {
-        // note that the awesomeface.png has transparency and thus an alpha channel, so make sure to tell OpenGL the data type is of GL_RGBA
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else
-    {
-        std::cout << "Failed to load texture" << std::endl;
-    }
-    stbi_image_free(data);
+    texturmaker(texture2, "../assets/awesomeface.png", GL_RGBA);
 
     // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
     // -------------------------------------------------------------------------------------------
