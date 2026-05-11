@@ -22,7 +22,6 @@ const unsigned int SCREEN_HEIGHT = 600;
 const unsigned int SCREEN_WIDTH = 800;
 float deltaTime;
 
-
 // stores how much we're seeing of either texture
 float mixValue = 0.2f;
 Controller controller;
@@ -60,8 +59,9 @@ void processInput(GLFWwindow *window)
     mixValue = std::clamp(mixValue, 0.0f, 1.0f);
 }
 
-void texturmaker(GLuint &texture, const char* path, GLenum format) {
-     glGenTextures(1, &texture);
+void texturmaker(GLuint &texture, const char *path, GLenum format)
+{
+    glGenTextures(1, &texture);
     // bind texture so any texture commands willl go to this texture
     glBindTexture(GL_TEXTURE_2D, texture);
 
@@ -135,8 +135,6 @@ int main()
         logger(ERROR, "Failed to initialize ImGui");
         return -1;
     }
-
-    
 
     Shader ourShader("../shaders/vertex.vs", "../shaders/fragment.fs");
 
@@ -223,7 +221,7 @@ int main()
 
     // like objects textures are also refrenced by an ID
     unsigned int texture1, texture2;
-   
+
     texturmaker(texture1, "../assets/container.jpg", GL_RGB);
 
     texturmaker(texture2, "../assets/awesomeface.png", GL_RGBA);
@@ -273,12 +271,26 @@ int main()
         // call shader program
         ourShader.use();
 
-        glm::mat4 transform = glm::mat4(1.0f);                                                 // initialize to identity matrix
-        transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));                   // translate the matrix by (0.5, -0.5, 0.0) (move it to the right and down)
-        transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f)); // rotate the matrix by the current time (in radians) around the z-axis
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
-        unsigned int transformLoc = glGetUniformLocation(ourShader.ID, "transform"); // get the location of the "transform" uniform in the shader program
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));    // set the value of the "transform" uniform to the transformation matrix we created
+        glm::mat4 view = glm::mat4(1.0f);
+        // note that we're translating the scene in the reverse direction of where we want to move
+        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
+        glm::mat4 projection;
+        projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+
+        model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f)); // rotate the matrix by the current time (in radians) around the z-axis
+
+        int modelLoc = glGetUniformLocation(ourShader.ID, "model");
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+        int viewLoc = glGetUniformLocation(ourShader.ID, "view");
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+
+        int projectionLoc = glGetUniformLocation(ourShader.ID, "projection");
+        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
         // call the configuration
         glBindVertexArray(VAO);
@@ -290,11 +302,13 @@ int main()
 
         // second transformation
         // ---------------------
-        transform = glm::mat4(1.0f);                                                         // reset it to identity matrix
-        transform = glm::translate(transform, glm::vec3(-0.5f, 0.5f, 0.0f));                 // translate the matrix by (-0.5, 0.5, 0.0) (move it to the left and up)
+        model = glm::mat4(1.0f);
+        model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
+        model = glm::translate(model, glm::vec3(-0.5f, 0.5f, 0.0f));                 // translate the matrix by (-0.5, 0.5, 0.0) (move it to the left and up)
         float scaleAmount = static_cast<float>(sin(glfwGetTime()));                          // calculate a scale factor that oscillates between 0.0 and 1.0 based on the sine of the current time
-        transform = glm::scale(transform, glm::vec3(scaleAmount, scaleAmount, scaleAmount)); // scale the matrix by the calculated scale factor
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, &transform[0][0]);                     // this time take the matrix value array's first element as its memory pointer value
+        model = glm::scale(model, glm::vec3(scaleAmount, scaleAmount, scaleAmount)); // scale the matrix by the calculated scale factor
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));                     // this time take the matrix value array's first element as its memory pointer value
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         // Rendering
