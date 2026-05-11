@@ -139,17 +139,50 @@ int main()
     Shader ourShader("../shaders/vertex.vs", "../shaders/fragment.fs");
 
     float vertices[] = {
-        // positions          // colors           // texture coords
-        0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,   // top right
-        0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,  // bottom right
-        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
-        -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f   // top left
-    };
+    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+     0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
 
-    unsigned int indices[] = {
-        0, 1, 3, // first triangle
-        1, 2, 3  // second triangle
-    };
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+};
+
+    
 
     // VBO = stores the actual vertex data (like positions, colors, etc.)
     // VAO = remembers how to use that data (how OpenGL should read it)
@@ -165,7 +198,7 @@ int main()
     glGenBuffers(1, &VBO);
 
     // Create 1 EBO and store its ID in EBO
-    glGenBuffers(1, &EBO);
+    //glGenBuffers(1, &EBO);
 
     // Bind the VAO so OpenGL knows we are working with it now
     // Any setup we do will be saved inside this VAO
@@ -185,9 +218,9 @@ int main()
     // GL_DYNAMIC_DRAW: the data is changed a lot and used many times.
 
     // bind EBO and copy indicies into buffer like VBO
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     // more info look at VBO
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    //glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     // Tell OpenGL how to read the vertex data from the VBO
 
@@ -199,18 +232,14 @@ int main()
     // (void*)0 = start reading at the beginning of the data
     // IMPORTANT: this uses the VBO currently bound to GL_ARRAY_BUFFER
     // read points from vertex data
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
 
     // Enable the vertex attribute at location 0 so OpenGL can use it
     glEnableVertexAttribArray(0);
 
-    // read color from vertex data
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
     // data for where to place texture
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     // IMPORTANT:
     // Do NOT unbind the EBO while the VAO is still bound
@@ -238,6 +267,8 @@ int main()
 
     // Unbind the VBO (optional, just to avoid accidental changes later)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glEnable(GL_DEPTH_TEST); // enable depth testing for 3D
     // render loop
     while (!glfwWindowShouldClose(window))
     {
@@ -256,8 +287,8 @@ int main()
 
         // glClear uses this color to clear the screen (sets it doesnt have to be called always)
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        // clear the buffer so you wont see previous frame (you have to specify which one)
-        glClear(GL_COLOR_BUFFER_BIT);
+        // clear the buffer so you wont see previous frame (you have to specify which one) (you can have multiple buffers like color, depth, stencil)
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // allows to use more than one texture assigning it to the texture unit(GL_TEXTURE0)
         glActiveTexture(GL_TEXTURE0);
@@ -278,8 +309,8 @@ int main()
         // note that we're translating the scene in the reverse direction of where we want to move
         view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
 
-        glm::mat4 projection;
-        projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+        glm::mat4 projection = glm::mat4(1.0f);;
+        projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
 
         model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f)); // rotate the matrix by the current time (in radians) around the z-axis
 
@@ -298,7 +329,7 @@ int main()
         // Normally, you'd have to bind the correct EBO for each object before calling glDrawElements.
         // However, VAOs remember which EBO was bound when the VAO was created.
         // So simply binding the VAO automatically binds the right EBO, making rendering easier.
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
         // second transformation
         // ---------------------
@@ -309,7 +340,7 @@ int main()
         float scaleAmount = static_cast<float>(sin(glfwGetTime()));                          // calculate a scale factor that oscillates between 0.0 and 1.0 based on the sine of the current time
         model = glm::scale(model, glm::vec3(scaleAmount, scaleAmount, scaleAmount)); // scale the matrix by the calculated scale factor
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));                     // this time take the matrix value array's first element as its memory pointer value
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
         // Rendering
         // (Your code clears your framebuffer, renders your other stuff etc.)
