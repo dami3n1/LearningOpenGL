@@ -8,7 +8,7 @@ class imguiLayer
 public:
     static bool imguiSetup(GLFWwindow *window);
     static void imguiRender();
-    static void customWindow1(float mixValue);
+    static void customWindow1(float &mixValue);
     static void Shutdown();
 
 private:
