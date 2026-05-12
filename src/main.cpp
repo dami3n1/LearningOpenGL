@@ -278,8 +278,10 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     float fov = 45.0f;
-    float aspectRatioX = SCREEN_WIDTH;
-    float aspectRatioY = SCREEN_HEIGHT;
+    int width = SCREEN_WIDTH, height = SCREEN_HEIGHT;
+    float aspectRatioX = width;
+    float aspectRatioY = height;
+    bool customaspectratio = false;
 
     float viewY = 0.0f;
     float viewZ = -3.0f;
@@ -293,8 +295,15 @@ int main()
         // input function called each frame
         processInput(window);
 
+        if (!customaspectratio)
+        {
+            glfwGetFramebufferSize(window, &width, &height);
+            aspectRatioX = (float)width;
+            aspectRatioY = (float)height;
+        }
+
         imguiLayer::imguiRender();
-        imguiLayer::customWindow1(mixValue, fov, aspectRatioX, aspectRatioY, viewX, viewY, viewZ);
+        imguiLayer::customWindow1(mixValue, fov, customaspectratio, aspectRatioX, aspectRatioY, viewX, viewY, viewZ);
 
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;

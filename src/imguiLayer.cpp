@@ -29,15 +29,20 @@ void imguiLayer::imguiRender()
     ImGui_ImplGlfw_NewFrame();
 }
 
-void imguiLayer::customWindow1(float &mixValue, float &fov, float &aspectRatioX, float &aspectRatioY, float &x, float &y, float &z)
+void imguiLayer::customWindow1(float &mixValue, float &fov, bool &customRatio, float &aspectRatioX, float &aspectRatioY, float &x, float &y, float &z)
 {
     ImGui::NewFrame();
     ImGui::Begin("My Window");
 
     ImGui::SliderFloat("Texture Mix", &mixValue, 0.0f, 1.0f);
     ImGui::SliderFloat("FoV", &fov, 0.0f, 180.0f);
-    ImGui::SliderFloat("Aspect Ratio X", &aspectRatioX, 0.0f, 1000.0f);
-    ImGui::SliderFloat("Aspect Ratio Y", &aspectRatioY, 0.0f, 1000.0f);
+    ImGui::Checkbox("Custom Ratio", &customRatio);
+
+    if (customRatio)
+    {
+        ImGui::SliderFloat("Aspect Ratio X", &aspectRatioX, 0.0f, 1000.0f);
+        ImGui::SliderFloat("Aspect Ratio Y", &aspectRatioY, 0.0f, 1000.0f);
+    }
     ImGui::SliderFloat("View X", &x, -10.0f, 10.0f);
     ImGui::SliderFloat("View Y", &y, -10.0f, 10.0f);
     ImGui::SliderFloat("View Z", &z, -10.0f, 10.0f);
