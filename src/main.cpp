@@ -331,12 +331,25 @@ int main()
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
-        glm::mat4 view = glm::mat4(1.0f);
-        // note that we're translating the scene in the reverse direction of where we want to move
-        view = glm::translate(view, glm::vec3(viewX, viewY, viewZ));
+        glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);    // this is the position of the camera in world space
+        glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f); // this is the point in world space that the camera is looking at
+        // this is the direction from the camera to the target (the direction the camera is looking at)
+        // because if you subtract 2 vectors you get the difference between them which is the oppposite direction of the camera target to the camera position
+        glm::vec3 cameraDirection = glm::normalize(cameraPos - cameraTarget);
+        glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+        // this is the right vector of the camera which is the cross product of the up vector and the camera direction (the direction the camera is looking at)
+        glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));
+        // this is the up vector of the camera which is the cross product of the camera direction and the camera right vector
+        glm::vec3 cameraUp = glm::cross(cameraDirection, cameraRight);
 
+        glm::mat4 view;
+        // note that we're translating the scene in the reverse direction of where we want to move
+        const float radius = 10.0f;
+        float camX = sin(glfwGetTime()) * radius;
+        float camZ = cos(glfwGetTime()) * radius;
+        view = glm::lookAt(glm::vec3(camX, 0.0, camZ), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
+        view = glm::translate(view, glm::vec3(viewX, viewY, viewZ));
         glm::mat4 projection = glm::mat4(1.0f);
-        ;
 
         projection = glm::perspective(glm::radians(fov), aspectRatioX / aspectRatioY, 0.1f, 100.0f);
 
