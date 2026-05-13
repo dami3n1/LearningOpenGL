@@ -29,6 +29,15 @@ void imguiLayer::imguiRender()
     ImGui_ImplGlfw_NewFrame();
 }
 
+void imguiLayer::demo()
+{
+    ImGui::NewFrame();
+    ImGui::ShowDemoWindow();
+    // Rendering
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
 void imguiLayer::customWindow1(float &mixValue, float &fov, bool &customRatio, float &aspectRatioX, float &aspectRatioY, float &x, float &y, float &z,float &directionX, float &directionY, float &directionZ, float deltaTime)
 {
     ImGui::NewFrame();

@@ -17,37 +17,31 @@
 #include "windowSystem.h"
 #include "logger.h"
 #include "imguiLayer.h"
+#include "camera.h"
 
-const unsigned int SCREEN_HEIGHT = 600;
-const unsigned int SCREEN_WIDTH = 800;
+unsigned int SCREEN_HEIGHT = 600;
+unsigned int SCREEN_WIDTH = 800;
 
 // stores how much we're seeing of either texture
 float mixValue = 0.2f;
 Controller controller;
-float lastX = SCREEN_WIDTH / 2.0f, lastY = SCREEN_HEIGHT / 2.0f;
 
-float yaw = -90.0f;
-float pitch = 0.0f;
-float fov = 45.0f;
-
+// camera
+Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+float lastX = SCREEN_WIDTH / 2.0f;
+float lastY = SCREEN_HEIGHT / 2.0f;
 bool firstMouse = true;
-bool uiMode = true;
-bool gameMode = true;
 
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);    // this is the position of the camera in world space
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f); // this is the direction the camera is looking at (the negative z-axis)
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0);
+// timing
+float deltaTime = 0.0f; // time between current frame and last frame
+float lastFrame = 0.0f;
 
-float deltaTime = 0.0f; // Time between current frame and last frame
-float lastFrame = 0.0f; // Time of last frame
-
-glm::vec3 direction;
-
-void mouse_callback(GLFWwindow *window, double xpos, double ypos)
+// glfw: whenever the mouse moves, this callback is called
+// -------------------------------------------------------
+void mouse_callback(GLFWwindow *window, double xposIn, double yposIn)
 {
-    ImGuiIO &io = ImGui::GetIO();
-    if (!gameMode)
-        return;
+    float xpos = static_cast<float>(xposIn);
+    float ypos = static_cast<float>(yposIn);
 
     if (firstMouse)
     {
@@ -57,26 +51,19 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos)
     }
 
     float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos;
+    float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+
     lastX = xpos;
     lastY = ypos;
 
-    float sensitivity = 0.1f;
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
+    camera.ProcessMouseMovement(xoffset, yoffset);
+}
 
-    yaw += xoffset;
-    pitch += yoffset;
-
-    if (pitch > 89.0f)
-        pitch = 89.0f;
-    if (pitch < -89.0f)
-        pitch = -89.0f;
-
-    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    direction.y = sin(glm::radians(pitch));
-    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    cameraFront = glm::normalize(direction);
+// glfw: whenever the mouse scroll wheel scrolls, this callback is called
+// ----------------------------------------------------------------------
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
+{
+    camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
 
 void processInput(GLFWwindow *window)
@@ -97,44 +84,17 @@ void processInput(GLFWwindow *window)
             mixValue = 0.0f;
     }
 
-    static bool tabPressed = false;
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
 
-    if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS)
-    {
-        if (!tabPressed)
-        {
-            gameMode = !gameMode;
-
-            if (gameMode)
-            {
-                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-            }
-            else
-            {
-                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-
-                // IMPORTANT: reset mouse so camera doesn't jump when returning
-                firstMouse = true;
-            }
-        }
-        tabPressed = true;
-    }
-    else
-    {
-        tabPressed = false;
-    }
-
-    const float cameraSpeed = 5.0f * deltaTime; // adjust accordingly
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        cameraPos += cameraSpeed * cameraFront;
+        camera.ProcessKeyboard(FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        cameraPos -= cameraSpeed * cameraFront;
+        camera.ProcessKeyboard(BACKWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        // cross product of cameraFront and cameraUp gives the right vector of the camera which is the direction to the right of the camera
-        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+        camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        // cross product of cameraFront and cameraUp gives the right vector of the camera which is the direction to the right of the camera
-        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+        camera.ProcessKeyboard(RIGHT, deltaTime);
 
     Vec2 left = controller.leftStick();
 
@@ -149,15 +109,6 @@ void processInput(GLFWwindow *window)
     mixValue += (-inputY) * speed * deltaTime;
 
     mixValue = std::clamp(mixValue, 0.0f, 1.0f);
-}
-
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-{
-    fov -= (float)yoffset;
-    if (fov < 1.0f)
-        fov = 1.0f;
-    if (fov > 180.0f)
-        fov = 180.0f; 
 }
 
 void texturmaker(GLuint &texture, const char *path, GLenum format)
@@ -222,9 +173,12 @@ int main()
     // disable vsync for uncapped framerate
     glfwSwapInterval(0);
 
-    glfwSetScrollCallback(window, scroll_callback); 
+    glfwSetScrollCallback(window, scroll_callback);
 
     glfwSetCursorPosCallback(window, mouse_callback);
+
+    // tell GLFW to capture our mouse
+    //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // initialize GLAD before we can use any opengl functions
     // cast's the glfw function which gives the OS specific function for GLAD to find
@@ -385,11 +339,7 @@ int main()
     // Unbind the VBO (optional, just to avoid accidental changes later)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    
     int width = SCREEN_WIDTH, height = SCREEN_HEIGHT;
-    float aspectRatioX = width;
-    float aspectRatioY = height;
-    bool customaspectratio = false;
 
     glEnable(GL_DEPTH_TEST); // enable depth testing for 3D
 
@@ -400,19 +350,17 @@ int main()
         // input function called each frame
         processInput(window);
 
-        float currentFrame = glfwGetTime();
+        float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        if (!customaspectratio)
-        {
-            glfwGetFramebufferSize(window, &width, &height);
-            aspectRatioX = (float)width;
-            aspectRatioY = (float)height;
-        }
+        glfwGetFramebufferSize(window, &width, &height);
+        SCREEN_WIDTH = (float)width;
+        SCREEN_HEIGHT = (float)height;
 
         imguiLayer::imguiRender();
-        imguiLayer::customWindow1(mixValue, fov, customaspectratio, aspectRatioX, aspectRatioY, cameraPos.x, cameraPos.y, cameraPos.z, direction.x, direction.y, direction.z, deltaTime);
+        imguiLayer::demo();
+        // imguiLayer::customWindow1(mixValue, fov, customaspectratio, aspectRatioX, aspectRatioY, cameraPos.x, cameraPos.y, cameraPos.z, direction.x, direction.y, direction.z, deltaTime);
 
         controller.update();
 
@@ -436,25 +384,14 @@ int main()
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
-        glm::vec3 direction;
-        direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-        direction.y = sin(glm::radians(pitch));
-        direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+        // pass projection matrix to shader (note that in this case it could change every frame)
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
+        ourShader.setMat4("projection", projection);
 
-        glm::mat4 view;
-
-        view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-        glm::mat4 projection = glm::mat4(1.0f);
-
-        projection = glm::perspective(glm::radians(fov), aspectRatioX / aspectRatioY, 0.1f, 100.0f);
-
-        model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f)); // rotate the matrix by the current time (in radians) around the z-axis
-
-        int viewLoc = glGetUniformLocation(ourShader.ID, "view");
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-
-        int projectionLoc = glGetUniformLocation(ourShader.ID, "projection");
-        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+        //camera.Position.y = 0.0f; // lock camera to the xz plane
+        // camera/view transformation
+        glm::mat4 view = camera.GetViewMatrix();
+        ourShader.setMat4("view", view);
 
         // call the configuration
         glBindVertexArray(VAO);
@@ -472,19 +409,6 @@ int main()
             int modelLoc = glGetUniformLocation(ourShader.ID, "model");
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
-        for (int i = 0; i % 3 == 0; i++)
-        {
-            int modelLoc = glGetUniformLocation(ourShader.ID, "model");
-            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-            model = glm::mat4(1.0f);
-            model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-
-            model = glm::translate(model, glm::vec3(-0.5f, 0.5f, 0.0f));                 // translate the matrix by (-0.5, 0.5, 0.0) (move it to the left and up)
-            float scaleAmount = static_cast<float>(sin(glfwGetTime()));                  // calculate a scale factor that oscillates between 0.0 and 1.0 based on the sine of the current time
-            model = glm::scale(model, glm::vec3(scaleAmount, scaleAmount, scaleAmount)); // scale the matrix by the calculated scale factor
-            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));            // this time take the matrix value array's first element as its memory pointer value
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
         // Draw triangles using the indices stored in the currently bound EBO (GL_ELEMENT_ARRAY_BUFFER)
