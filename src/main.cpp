@@ -95,6 +95,10 @@ void processInput(GLFWwindow *window)
         camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+        camera.ProcessKeyboard(UP, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+        camera.ProcessKeyboard(DOWN, deltaTime);
 
     Vec2 left = controller.leftStick();
 
@@ -178,7 +182,7 @@ int main()
     glfwSetCursorPosCallback(window, mouse_callback);
 
     // tell GLFW to capture our mouse
-    //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // initialize GLAD before we can use any opengl functions
     // cast's the glfw function which gives the OS specific function for GLAD to find
@@ -381,53 +385,38 @@ int main()
         // call shader program
         ourShader.use();
 
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-
         // pass projection matrix to shader (note that in this case it could change every frame)
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.001f, 100.0f);
         ourShader.setMat4("projection", projection);
 
-        //camera.Position.y = 0.0f; // lock camera to the xz plane
-        // camera/view transformation
+        // camera.Position.y = 0.0f; // lock camera to the xz plane
+
+        //  camera/view transformation
         glm::mat4 view = camera.GetViewMatrix();
         ourShader.setMat4("view", view);
 
+        // cube 1
+        glm::mat4 model = glm::mat4(1.0f);
+
+        float angle = 20.0f * glfwGetTime();
+        model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.0f, 0.0f));
+
+        ourShader.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        // model = glm::mat4(1.0f);
+        //  cube 2
+        // model = glm::translate(model, glm::vec3(5.0f, 0.0f, 0.0f));
+        // model = glm::rotate(model, glm::radians(-angle), glm::vec3(1.0f, 0.3f, 0.5f));
+        // ourShader.setMat4("model", model);
+        // glDrawArrays(GL_TRIANGLES, 0, 36);
+
         // call the configuration
         glBindVertexArray(VAO);
-        for (unsigned int i = 0; i < 10; i++)
-        {
-            // calculate the model matrix for each object and pass it to shader before drawing
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, cubePositions[i]);
-            float angle = 20.0f * i;
-
-            if (i % 3 == 0)
-                angle = glfwGetTime() * 50.0f;
-
-            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-            int modelLoc = glGetUniformLocation(ourShader.ID, "model");
-            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
         // Draw triangles using the indices stored in the currently bound EBO (GL_ELEMENT_ARRAY_BUFFER)
         // Normally, you'd have to bind the correct EBO for each object before calling glDrawElements.
         // However, VAOs remember which EBO was bound when the VAO was created.
         // So simply binding the VAO automatically binds the right EBO, making rendering easier.
-
-        // second transformation
-        // ---------------------
-        int modelLoc = glGetUniformLocation(ourShader.ID, "model");
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        model = glm::mat4(1.0f);
-        model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-
-        model = glm::translate(model, glm::vec3(-0.5f, 0.5f, 0.0f));                 // translate the matrix by (-0.5, 0.5, 0.0) (move it to the left and up)
-        float scaleAmount = static_cast<float>(sin(glfwGetTime()));                  // calculate a scale factor that oscillates between 0.0 and 1.0 based on the sine of the current time
-        model = glm::scale(model, glm::vec3(scaleAmount, scaleAmount, scaleAmount)); // scale the matrix by the calculated scale factor
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));            // this time take the matrix value array's first element as its memory pointer value
-        glDrawArrays(GL_TRIANGLES, 0, 36);
 
         // Rendering
         // (Your code clears your framebuffer, renders your other stuff etc.)
