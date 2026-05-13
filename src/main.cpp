@@ -20,11 +20,64 @@
 
 const unsigned int SCREEN_HEIGHT = 600;
 const unsigned int SCREEN_WIDTH = 800;
-float deltaTime;
 
 // stores how much we're seeing of either texture
 float mixValue = 0.2f;
 Controller controller;
+float lastX = SCREEN_WIDTH / 2.0f, lastY = SCREEN_HEIGHT / 2.0f;
+
+float yaw = -90.0f;
+float pitch = 0.0f;
+float fov = 45.0f;
+
+bool firstMouse = true;
+bool uiMode = true;
+bool gameMode = true;
+
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);    // this is the position of the camera in world space
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f); // this is the direction the camera is looking at (the negative z-axis)
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0);
+
+float deltaTime = 0.0f; // Time between current frame and last frame
+float lastFrame = 0.0f; // Time of last frame
+
+glm::vec3 direction;
+
+void mouse_callback(GLFWwindow *window, double xpos, double ypos)
+{
+    ImGuiIO &io = ImGui::GetIO();
+    if (!gameMode)
+        return;
+
+    if (firstMouse)
+    {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos;
+    lastX = xpos;
+    lastY = ypos;
+
+    float sensitivity = 0.1f;
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;
+
+    yaw += xoffset;
+    pitch += yoffset;
+
+    if (pitch > 89.0f)
+        pitch = 89.0f;
+    if (pitch < -89.0f)
+        pitch = -89.0f;
+
+    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    direction.y = sin(glm::radians(pitch));
+    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    cameraFront = glm::normalize(direction);
+}
 
 void processInput(GLFWwindow *window)
 {
@@ -44,6 +97,45 @@ void processInput(GLFWwindow *window)
             mixValue = 0.0f;
     }
 
+    static bool tabPressed = false;
+
+    if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS)
+    {
+        if (!tabPressed)
+        {
+            gameMode = !gameMode;
+
+            if (gameMode)
+            {
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            }
+            else
+            {
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+                // IMPORTANT: reset mouse so camera doesn't jump when returning
+                firstMouse = true;
+            }
+        }
+        tabPressed = true;
+    }
+    else
+    {
+        tabPressed = false;
+    }
+
+    const float cameraSpeed = 5.0f * deltaTime; // adjust accordingly
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        cameraPos += cameraSpeed * cameraFront;
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        cameraPos -= cameraSpeed * cameraFront;
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        // cross product of cameraFront and cameraUp gives the right vector of the camera which is the direction to the right of the camera
+        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        // cross product of cameraFront and cameraUp gives the right vector of the camera which is the direction to the right of the camera
+        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+
     Vec2 left = controller.leftStick();
 
     float speed = 1.5f;
@@ -57,6 +149,15 @@ void processInput(GLFWwindow *window)
     mixValue += (-inputY) * speed * deltaTime;
 
     mixValue = std::clamp(mixValue, 0.0f, 1.0f);
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    fov -= (float)yoffset;
+    if (fov < 1.0f)
+        fov = 1.0f;
+    if (fov > 180.0f)
+        fov = 180.0f; 
 }
 
 void texturmaker(GLuint &texture, const char *path, GLenum format)
@@ -117,6 +218,13 @@ int main()
         windowSystem::glfw_shutdown();
         return -1;
     }
+
+    // disable vsync for uncapped framerate
+    glfwSwapInterval(0);
+
+    glfwSetScrollCallback(window, scroll_callback); 
+
+    glfwSetCursorPosCallback(window, mouse_callback);
 
     // initialize GLAD before we can use any opengl functions
     // cast's the glfw function which gives the OS specific function for GLAD to find
@@ -277,23 +385,24 @@ int main()
     // Unbind the VBO (optional, just to avoid accidental changes later)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    float fov = 45.0f;
+    
     int width = SCREEN_WIDTH, height = SCREEN_HEIGHT;
     float aspectRatioX = width;
     float aspectRatioY = height;
     bool customaspectratio = false;
 
-    float viewY = 0.0f;
-    float viewZ = -3.0f;
-    float viewX = 0.0f;
-
     glEnable(GL_DEPTH_TEST); // enable depth testing for 3D
+
     // render loop
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents(); // processes events received in window and returns a response(if requested)
         // input function called each frame
         processInput(window);
+
+        float currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
 
         if (!customaspectratio)
         {
@@ -303,11 +412,7 @@ int main()
         }
 
         imguiLayer::imguiRender();
-        imguiLayer::customWindow1(mixValue, fov, customaspectratio, aspectRatioX, aspectRatioY, viewX, viewY, viewZ);
-
-        float currentFrame = glfwGetTime();
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
+        imguiLayer::customWindow1(mixValue, fov, customaspectratio, aspectRatioX, aspectRatioY, cameraPos.x, cameraPos.y, cameraPos.z, direction.x, direction.y, direction.z, deltaTime);
 
         controller.update();
 
@@ -331,24 +436,14 @@ int main()
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
-        glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);    // this is the position of the camera in world space
-        glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f); // this is the point in world space that the camera is looking at
-        // this is the direction from the camera to the target (the direction the camera is looking at)
-        // because if you subtract 2 vectors you get the difference between them which is the oppposite direction of the camera target to the camera position
-        glm::vec3 cameraDirection = glm::normalize(cameraPos - cameraTarget);
-        glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
-        // this is the right vector of the camera which is the cross product of the up vector and the camera direction (the direction the camera is looking at)
-        glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));
-        // this is the up vector of the camera which is the cross product of the camera direction and the camera right vector
-        glm::vec3 cameraUp = glm::cross(cameraDirection, cameraRight);
+        glm::vec3 direction;
+        direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+        direction.y = sin(glm::radians(pitch));
+        direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
 
         glm::mat4 view;
-        // note that we're translating the scene in the reverse direction of where we want to move
-        const float radius = 10.0f;
-        float camX = sin(glfwGetTime()) * radius;
-        float camZ = cos(glfwGetTime()) * radius;
-        view = glm::lookAt(glm::vec3(camX, 0.0, camZ), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
-        view = glm::translate(view, glm::vec3(viewX, viewY, viewZ));
+
+        view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
         glm::mat4 projection = glm::mat4(1.0f);
 
         projection = glm::perspective(glm::radians(fov), aspectRatioX / aspectRatioY, 0.1f, 100.0f);

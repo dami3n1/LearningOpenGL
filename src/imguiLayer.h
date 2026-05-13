@@ -8,7 +8,7 @@ class imguiLayer
 public:
     static bool imguiSetup(GLFWwindow *window);
     static void imguiRender();
-    static void customWindow1(float &mixValue, float &fov, bool &customRatio, float &aspectRatioX, float &aspectRatioY, float &x, float &y, float &z);
+    static void customWindow1(float &mixValue, float &fov, bool &customRatio, float &aspectRatioX, float &aspectRatioY, float &x, float &y, float &z,float &directionX, float &directionY, float &directionZ, float deltaTime);
     static void Shutdown();
 
 private:

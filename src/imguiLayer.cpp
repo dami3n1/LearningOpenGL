@@ -29,7 +29,7 @@ void imguiLayer::imguiRender()
     ImGui_ImplGlfw_NewFrame();
 }
 
-void imguiLayer::customWindow1(float &mixValue, float &fov, bool &customRatio, float &aspectRatioX, float &aspectRatioY, float &x, float &y, float &z)
+void imguiLayer::customWindow1(float &mixValue, float &fov, bool &customRatio, float &aspectRatioX, float &aspectRatioY, float &x, float &y, float &z,float &directionX, float &directionY, float &directionZ, float deltaTime)
 {
     ImGui::NewFrame();
     ImGui::Begin("My Window");
@@ -46,6 +46,35 @@ void imguiLayer::customWindow1(float &mixValue, float &fov, bool &customRatio, f
     ImGui::SliderFloat("View X", &x, -10.0f, 10.0f);
     ImGui::SliderFloat("View Y", &y, -10.0f, 10.0f);
     ImGui::SliderFloat("View Z", &z, -10.0f, 10.0f);
+    ImGui::SliderFloat("Direction X", &directionX, -1.0f, 1.0f);
+    ImGui::SliderFloat("Direction Y", &directionY, -1.0f, 1.0f);
+    ImGui::SliderFloat("Direction Z", &directionZ, -1.0f, 1.0f);
+
+    static float fpsHistory[120] = {};
+    static float avgHistory[120] = {};
+    static int index = 0;
+
+    float fps = (deltaTime > 0.0f) ? (1.0f / deltaTime) : 0.0f;
+
+    static float fpsAvg = 0.0f;
+    fpsAvg = fpsAvg * 0.9f + fps * 0.1f;
+
+    // store values
+    fpsHistory[index] = fps;
+    avgHistory[index] = fpsAvg;
+
+    index = (index + 1) % 120;
+
+    // text
+    ImGui::Text("FPS: %.1f", fps);
+    ImGui::Text("Avg FPS: %.1f", fpsAvg);
+    ImGui::Text("ImGui FPS: %.1f", ImGui::GetIO().Framerate);
+
+    // graphs
+    ImGui::PlotLines("FPS (Instant)", fpsHistory, 120, index, nullptr, 0.0f, 200.0f, ImVec2(0, 80));
+    ImGui::PlotLines("FPS (Average)", avgHistory, 120, index, nullptr, 0.0f, 200.0f, ImVec2(0, 80));
+
+    
 
     ImGui::End();
     // Rendering
