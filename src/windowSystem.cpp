@@ -12,6 +12,7 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 
 bool windowSystem::glfw_init()
 {
+    logger(INFO, "Initializing GLFW");
     if (!glfwInit()) // Initiates glfw (returns GL_TRUE if successfull)
     {
         logger(ERROR, "Failed to initialize GLFW");\
@@ -28,12 +29,12 @@ bool windowSystem::glfw_init()
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-
     return true;
 }
 
 GLFWwindow* windowSystem::makeWindow(int screenWidth, int screenHeight, const char* title)
 {
+    logger(INFO, "Creating GLFW window");
     // create window object
     // define how window should be set up and creates it
     GLFWwindow *window = glfwCreateWindow(screenWidth, screenHeight, title, NULL, NULL);
@@ -47,6 +48,8 @@ GLFWwindow* windowSystem::makeWindow(int screenWidth, int screenHeight, const ch
     glfwMakeContextCurrent(window);
     // tell glfw to call function when window resize; glfw will autoatically fill in data for framebuffer_size_callback
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    std::string windowinfo = "GLFW Window created: '" + std::string(title) + "'";
+    logger(INFO, windowinfo);
 
     return window;
 }
