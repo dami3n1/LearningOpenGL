@@ -20,10 +20,7 @@ uniform Material material;
 out vec4 FragColor;
 in vec3 Normal;  
 in vec3 FragPos;  
-  
-uniform vec3 objectColor;
-uniform vec3 lightColor;
-uniform vec3 lightPos; 
+
 uniform vec3 viewPos;
 
 void main()
@@ -34,7 +31,7 @@ void main()
     //by taking the dot product of the normal and the light direction vectors
     //to get a value between 0 and 1 that we can use to scale the light color
     vec3 norm = normalize(Normal);
-    vec3 lightDir = normalize(lightPos - FragPos);
+    vec3 lightDir = normalize(light.position - FragPos);
     //then we get the max of the dot product and 0.0 to make sure we don't get negative values which would be the case if the light is coming from behind the surface  
     float diff = max(dot(norm, lightDir), 0.0);
     vec3 diffuse  = light.diffuse * (diff * material.diffuse);
