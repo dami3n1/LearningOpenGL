@@ -10,6 +10,8 @@ struct Material {
     sampler2D diffuse; // the diffuse texture of the material, which is the base color of the surface
     sampler2D specular; // the specular texture of the material, which is used to create highlights on shiny surfaces
     sampler2D emission; // the emission texture of the material, which is used to create a glowing effect on the surface, it adds light to the scene without being affected by the lighting calculations
+    vec3 emissionColor; // the color of the emission, which is a multiplier for the emission texture, it allows you to control the color of the light emitted by the surface
+    float emissionStrength; // the strength of the emission, which is a multiplier for the emission texture, it allows you to control how much light the surface emits
     float shininess; // scattering/radius of the specular highlight, the higher the number the smaller and sharper the highlight, the lower the number the larger and duller the highlight
 };
 
@@ -50,7 +52,16 @@ void main()
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
     vec3 specular = light.specular * spec * texture(material.specular, TexCoords).rgb;
 
-    vec3 emission = texture(material.emission, TexCoords).rgb;
+     // 1. Fetch the raw texture color
+    vec3 emTex = texture(material.emission, TexCoords).rgb;
+
+    // 2. Find the brightness of the pixel (0.0 to 1.0)
+    // This turns your green shapes into a white mask, and background stays black
+    float mask = max(emTex.r, max(emTex.g, emTex.b)); 
+
+    // 3. Multiply the mask by your new color and strength
+    // Now black stays black, and the green shapes become full blue
+    vec3 emission = mask * material.emissionColor * material.emissionStrength;
 
     vec3 result = ambient + diffuse + specular + emission;
     FragColor = vec4(result, 1.0);

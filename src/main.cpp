@@ -347,8 +347,14 @@ int main()
         lightingShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
         lightingShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
 
-       // lightingShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+        // lightingShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
         lightingShader.setFloat("material.shininess", 32.0f);
+        
+        float time = glfwGetTime();
+        float emissionStrength = (sin(time) * 0.5 + 0.5) * 2.0f; // oscillates between 0 and 2
+
+        lightingShader.setFloat("material.emissionStrength", emissionStrength);
+        lightingShader.setVec3("material.emissionColor", 0.0f, 0.0f, 1.0f);
 
         // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.01f, 200.0f);
@@ -374,8 +380,8 @@ int main()
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
         // rotate light around the cube
-        //lightPos.x = cos(glfwGetTime()) * 2.0f;
-        //lightPos.z = sin(glfwGetTime()) * 2.0f;
+        // lightPos.x = cos(glfwGetTime()) * 2.0f;
+        // lightPos.z = sin(glfwGetTime()) * 2.0f;
 
         // also draw the lamp object
         lightCubeShader.use();
