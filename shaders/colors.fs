@@ -7,9 +7,9 @@ struct Light {
 };
 
 struct Material {
-    vec3 ambient; // what color is reflected under ambient lighting (ususally the same as the surface color)
-    vec3 diffuse; // color of surface under diffuse lighting (just like ambiet lighting) but it is sset to desired surface color
-    vec3 specular; //sets the color of the specular highlight on the surface
+    sampler2D diffuse; // the diffuse texture of the material, which is the base color of the surface
+    sampler2D specular; // the specular texture of the material, which is used to create highlights on shiny surfaces
+    sampler2D emission; // the emission texture of the material, which is used to create a glowing effect on the surface, it adds light to the scene without being affected by the lighting calculations
     float shininess; // scattering/radius of the specular highlight, the higher the number the smaller and sharper the highlight, the lower the number the larger and duller the highlight
 };
 
@@ -18,14 +18,16 @@ uniform Light light;
 uniform Material material;
 
 out vec4 FragColor;
+
 in vec3 Normal;  
 in vec3 FragPos;  
+in vec2 TexCoords;
 
 uniform vec3 viewPos;
 
 void main()
 {
-    vec3 ambient  = light.ambient * material.ambient; 
+    vec3 ambient = light.ambient * texture(material.diffuse, TexCoords).rgb;
 
     //diffuse lighting
     //by taking the dot product of the normal and the light direction vectors
@@ -34,7 +36,7 @@ void main()
     vec3 lightDir = normalize(light.position - FragPos);
     //then we get the max of the dot product and 0.0 to make sure we don't get negative values which would be the case if the light is coming from behind the surface  
     float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse  = light.diffuse * (diff * material.diffuse);
+    vec3 diffuse = light.diffuse * diff * texture(material.diffuse, TexCoords).rgb;  
 
     // calculate the view direction and the reflection direction for specular lighting
     //you can do this in world space or in view space, but you need to make sure that the light direction and the normal are in the same space as well
@@ -46,8 +48,10 @@ void main()
     // then we take the dot product of the view direction and the reflection direction to get the specular intensity
     //the number raises to the power of the number which increases it shininess of the surface, the higher the number the shinier the surface
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-   vec3 specular = light.specular * (spec * material.specular); 
+    vec3 specular = light.specular * spec * texture(material.specular, TexCoords).rgb;
 
-    vec3 result = ambient + diffuse + specular;
+    vec3 emission = texture(material.emission, TexCoords).rgb;
+
+    vec3 result = ambient + diffuse + specular + emission;
     FragColor = vec4(result, 1.0);
 }
