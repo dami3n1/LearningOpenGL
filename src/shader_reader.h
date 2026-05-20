@@ -3,6 +3,7 @@
 
 #include <glad/glad.h> //for opengl headers
 #include <glm/glm.hpp>
+#include "logger.h"
 
 #include <string>
 #include <fstream>
@@ -39,7 +40,7 @@ public:
             vertexCode = vShaderStream.str();
             fragmentCode = fShaderStream.str();
         } catch (std::ifstream::failure &e) {
-            std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
+            logger(ERROR, "Shader file not successfully read: " + std::string(e.what()));
         }
         const char *vShaderCode = vertexCode.c_str();
         const char *fShaderCode = fragmentCode.c_str();
@@ -167,7 +168,7 @@ private:
             if (!success)
             {
                 glGetShaderInfoLog(shader, 1024, NULL, infoLog);
-                std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+                logger(ERROR, "Shader compilation error of type: " + type + "\n" + std::string(infoLog));
             }
         }
         else
@@ -176,7 +177,7 @@ private:
             if (!success)
             {
                 glGetProgramInfoLog(shader, 1024, NULL, infoLog);
-                std::cout << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+                logger(ERROR, "Program linking error of type: " + type + "\n" + std::string(infoLog));
             }
         }
     }
