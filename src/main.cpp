@@ -19,8 +19,8 @@
 #include "imguiLayer.h"
 #include "camera.h"
 
-unsigned int SCREEN_HEIGHT = 600;
-unsigned int SCREEN_WIDTH = 800;
+int SCREEN_HEIGHT = 600;
+int SCREEN_WIDTH = 800;
 
 // stores how much we're seeing of either texture
 float mixValue = 0.2f;
@@ -207,7 +207,7 @@ int main()
         return -1;
     }
 
-    // set glViewport so first frame renders correctly before hiting our resize function
+    glfwGetFramebufferSize(window, &SCREEN_WIDTH, &SCREEN_HEIGHT);
     glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
     if (!imguiLayer::imguiSetup(window))
@@ -358,7 +358,10 @@ int main()
         lightingShader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
         lightingShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
         lightingShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-        lightingShader.setVec3("light.direction", -0.2f, -1.0f, -0.3f);
+
+        lightingShader.setFloat("light.constant", 1.0f);
+        lightingShader.setFloat("light.linear", 0.09f);
+        lightingShader.setFloat("light.quadratic", 0.032f);
 
         // lightingShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
         lightingShader.setFloat("material.shininess", 32.0f);

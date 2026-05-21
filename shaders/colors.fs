@@ -1,9 +1,14 @@
 #version 330 core
 struct Light {
-    vec3 direction; // the direction of the light, which is used to calculate the diffuse and specular lighting on the surface, it is usually a normalized vector that points from the surface to the light source
+    vec3 position;
+
     vec3 ambient; // color of the ambient light, which is the light that is scattered in all directions and illuminates all objects equally, regardless of their position or orientation
     vec3 diffuse; // color of the diffuse light, which is the light that is scattered in all directions but is stronger on surfaces that are directly facing the light source
     vec3 specular; // color of the specular light, which is the light that is reflected in a specific direction and creates highlights on shiny surfaces
+
+    float constant;
+    float linear;
+    float quadratic;
 };
 
 struct Material {
@@ -33,7 +38,7 @@ void main()
 
     //diffuse lighting
     vec3 norm = normalize(Normal);
-    vec3 lightDir = normalize(-light.direction); // negative because we want the direction from the fragment to the light source
+    vec3 lightDir = normalize(light.position - FragPos); 
     //then we get the max of the dot product and 0.0 to make sure we don't get negative values which would be the case if the light is coming from behind the surface  
     float diff = max(dot(norm, lightDir), 0.0);
     vec3 diffuse = light.diffuse * diff * texture(material.diffuse, TexCoords).rgb;  
@@ -60,6 +65,13 @@ void main()
     // 3. Multiply the mask by your new color and strength
     // Now black stays black, and the green shapes become full blue
     vec3 emission = mask * material.emissionColor * material.emissionStrength;
+
+    float distance = length(light.position - FragPos);
+    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
+
+    ambient *= attenuation;
+    diffuse *= attenuation;
+    specular *= attenuation;
 
     vec3 result = ambient + diffuse + specular + emission;
     FragColor = vec4(result, 1.0);
