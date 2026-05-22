@@ -3,6 +3,7 @@ struct Light {
     vec3 position;
     vec3 direction;
     float cutOff;
+    float outerCutOff;
 
     vec3 ambient; // color of the ambient light, which is the light that is scattered in all directions and illuminates all objects equally, regardless of their position or orientation
     vec3 diffuse; // color of the diffuse light, which is the light that is scattered in all directions but is stronger on surfaces that are directly facing the light source
@@ -36,16 +37,11 @@ uniform vec3 viewPos;
 
 void main()
 {
-    vec3 lightDir = normalize(light.position - FragPos); 
-    float theta = dot(lightDir, normalize(-light.direction));
-
-    if(theta > light.cutOff)
-    {
     vec3 ambient = light.ambient * texture(material.diffuse, TexCoords).rgb;
 
     //diffuse lighting
     vec3 norm = normalize(Normal);
-   
+    vec3 lightDir = normalize(light.position - FragPos); 
     //then we get the max of the dot product and 0.0 to make sure we don't get negative values which would be the case if the light is coming from behind the surface  
     float diff = max(dot(norm, lightDir), 0.0);
     vec3 diffuse = light.diffuse * diff * texture(material.diffuse, TexCoords).rgb;  
@@ -56,7 +52,6 @@ void main()
     vec3 viewDir = normalize(viewPos - FragPos);
     //negative light direction because we want the direction from the fragment to the light source
     vec3 reflectDir = reflect(-lightDir, norm); 
-
     // then we take the dot product of the view direction and the reflection direction to get the specular intensity
     //the number raises to the power of the number which increases it shininess of the surface, the higher the number the shinier the surface
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
@@ -64,44 +59,28 @@ void main()
 
      // 1. Fetch the raw texture color
     vec3 emTex = texture(material.emission, TexCoords).rgb;
-
     // 2. Find the brightness of the pixel (0.0 to 1.0)
     // This turns your green shapes into a white mask, and background stays black
     float mask = max(emTex.r, max(emTex.g, emTex.b)); 
-
     // 3. Multiply the mask by your new color and strength
     // Now black stays black, and the green shapes become full blue
     vec3 emission = mask * material.emissionColor * material.emissionStrength;
 
+    //spotlight sof edges
+    float theta = dot(lightDir, normalize(-light.direction));
+    float epsilon = light.cutOff - light.outerCutOff;
+    float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
+    
+    diffuse *= intensity;
+    specular *= intensity;
+
+    //attentuation
     float distance = length(light.position - FragPos);
     float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
-
     ambient *= attenuation;
     diffuse *= attenuation;
     specular *= attenuation;
 
     vec3 result = ambient + diffuse + specular + emission;
-
     FragColor = vec4(result, 1.0);
-
-    }
-    else
-    {
-         // 1. Fetch the raw texture color
-    vec3 emTex = texture(material.emission, TexCoords).rgb;
-
-    // 2. Find the brightness of the pixel (0.0 to 1.0)
-    // This turns your green shapes into a white mask, and background stays black
-    float mask = max(emTex.r, max(emTex.g, emTex.b)); 
-
-    // 3. Multiply the mask by your new color and strength
-    // Now black stays black, and the green shapes become full blue
-    vec3 emission = mask * material.emissionColor * material.emissionStrength;
-
-    float distance = length(light.position - FragPos);
-    
-    vec3 ambient = light.ambient * texture(material.diffuse, TexCoords).rgb;
-    vec3 result = ambient + emission;
-    FragColor = vec4(result, 1.0);
-    }
 }
