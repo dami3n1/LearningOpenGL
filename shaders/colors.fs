@@ -86,5 +86,22 @@ void main()
 
     }
     else
-    FragColor = vec4(light.ambient * vec3(texture(material.diffuse, TexCoords)), 1.0);
+    {
+         // 1. Fetch the raw texture color
+    vec3 emTex = texture(material.emission, TexCoords).rgb;
+
+    // 2. Find the brightness of the pixel (0.0 to 1.0)
+    // This turns your green shapes into a white mask, and background stays black
+    float mask = max(emTex.r, max(emTex.g, emTex.b)); 
+
+    // 3. Multiply the mask by your new color and strength
+    // Now black stays black, and the green shapes become full blue
+    vec3 emission = mask * material.emissionColor * material.emissionStrength;
+
+    float distance = length(light.position - FragPos);
+    
+    vec3 ambient = light.ambient * texture(material.diffuse, TexCoords).rgb;
+    vec3 result = ambient + emission;
+    FragColor = vec4(result, 1.0);
+    }
 }
