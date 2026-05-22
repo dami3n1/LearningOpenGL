@@ -5,6 +5,8 @@ struct Light {
     float cutOff;
     float outerCutOff;
 
+    sampler2D cookie;
+
     vec3 ambient; // color of the ambient light, which is the light that is scattered in all directions and illuminates all objects equally, regardless of their position or orientation
     vec3 diffuse; // color of the diffuse light, which is the light that is scattered in all directions but is stronger on surfaces that are directly facing the light source
     vec3 specular; // color of the specular light, which is the light that is reflected in a specific direction and creates highlights on shiny surfaces
@@ -34,6 +36,7 @@ in vec3 FragPos;
 in vec2 TexCoords;
 
 uniform vec3 viewPos;
+uniform vec2 viewPort;
 
 void main()
 {
@@ -69,8 +72,17 @@ void main()
     //spotlight sof edges
     float theta = dot(lightDir, normalize(-light.direction));
     float epsilon = light.cutOff - light.outerCutOff;
-    float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
+    float intensity = smoothstep(0.0, 1.0, (theta - light.outerCutOff) / epsilon);
     
+    vec2 fragCoord = gl_FragCoord.xy / viewPort;
+    fragCoord.y = 1.0 - fragCoord.y;
+
+    // zoom amount
+    float scale = 0.65;
+    fragCoord = (fragCoord - 0.5) / scale + 0.5;
+
+    intensity *= length(texture(light.cookie, fragCoord).rgb);
+
     diffuse *= intensity;
     specular *= intensity;
 
@@ -80,6 +92,8 @@ void main()
     ambient *= attenuation;
     diffuse *= attenuation;
     specular *= attenuation;
+
+    
 
     vec3 result = ambient + diffuse + specular + emission;
     FragColor = vec4(result, 1.0);

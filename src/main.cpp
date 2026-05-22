@@ -31,6 +31,8 @@ Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 float lastX = SCREEN_WIDTH / 2.0f;
 float lastY = SCREEN_HEIGHT / 2.0f;
 bool firstMouse = true;
+bool imguitoggle = false;
+bool tabwasPressed = false;
 
 // timing
 float deltaTime = 0.0f; // time between current frame and last frame
@@ -42,6 +44,9 @@ glm::vec3 lightPos(1.2f, 0.0f, 2.0f);
 // -------------------------------------------------------
 void mouse_callback(GLFWwindow *window, double xposIn, double yposIn)
 {
+    if (imguitoggle)
+        return;
+
     float xpos = static_cast<float>(xposIn);
     float ypos = static_cast<float>(yposIn);
 
@@ -143,6 +148,36 @@ void processInput(GLFWwindow *window)
 
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+
+    int tabState = glfwGetKey(window, GLFW_KEY_TAB);
+
+    if (tabState == GLFW_PRESS && !tabwasPressed)
+    {
+        tabwasPressed = true;
+
+        imguitoggle = !imguitoggle;
+
+        ImGuiIO &io = ImGui::GetIO();
+
+        if (imguitoggle)
+        {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+            io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+        }
+        else
+        {
+            io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
+
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+            firstMouse = true;
+        }
+    }
+    else if (tabState == GLFW_RELEASE)
+    {
+        tabwasPressed = false;
+    }
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         camera.ProcessKeyboard(FORWARD, deltaTime);
@@ -320,11 +355,13 @@ int main()
     unsigned int diffuseMap = loadTexture("../assets/container2.png");
     unsigned int specularMap = loadTexture("../assets/container2_specular.png");
     unsigned int emissionMap = loadTexture("../assets/matrix.jpg");
+    unsigned int lightcookie = loadTexture("../assets/awesomeface.png");
 
     lightingShader.use();
     lightingShader.setInt("material.diffuse", 0);  // set the diffuse texture unit to 0
     lightingShader.setInt("material.specular", 1); // set the specular texture unit to 1
     lightingShader.setInt("material.emission", 2); // set the emission texture unit to 2
+    lightingShader.setInt("light.cookie", 3);
 
     // render loop
     while (!glfwWindowShouldClose(window))
@@ -367,6 +404,8 @@ int main()
         lightingShader.setFloat("light.linear", 0.09f);
         lightingShader.setFloat("light.quadratic", 0.032f);
 
+        lightingShader.setVec2("viewPort", SCREEN_WIDTH, SCREEN_HEIGHT);
+
         // lightingShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
         lightingShader.setFloat("material.shininess", 32.0f);
 
@@ -390,6 +429,9 @@ int main()
 
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, emissionMap); // bind the emission map texture
+
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, lightcookie);
 
         // render the cubes
         glBindVertexArray(cubeVAO);
