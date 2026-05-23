@@ -102,10 +102,8 @@ unsigned int loadTexture(char const *path)
         // s,t,r = x,y,z
         // texture wrapping/filtering/mipmap options
         // wrapping repeats the image horizontally and vertically
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-        float borderColor[] = { 1.0f, 0.0f, 0.0f, 1.0f };
-        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);  
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         // filtering blends the colors of the texture when the texture is scaled up or down
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         // blends colors but no mipmap option (only works when downscaling)
@@ -363,13 +361,11 @@ int main()
     unsigned int diffuseMap = loadTexture("../assets/container2.png");
     unsigned int specularMap = loadTexture("../assets/container2_specular.png");
     unsigned int emissionMap = loadTexture("../assets/matrix.jpg");
-    unsigned int lightcookie = loadTexture("../assets/awesomeface.png");
 
     lightingShader.use();
     lightingShader.setInt("material.diffuse", 0);  // set the diffuse texture unit to 0
     lightingShader.setInt("material.specular", 1); // set the specular texture unit to 1
-    //lightingShader.setInt("material.emission", 2); // set the emission texture unit to 2
-    //lightingShader.setInt("light.cookie", 3);
+    lightingShader.setInt("material.emission", 2); // set the emission texture unit to 2
 
     // render loop
     while (!glfwWindowShouldClose(window))
@@ -455,7 +451,7 @@ int main()
         float time = glfwGetTime();
         float emissionStrength = (sin(time) * 0.5 + 0.5) * 2.0f; // oscillates between 0 and 2
 
-        lightingShader.setFloat("material.emissionStrength", 0.f);
+        lightingShader.setFloat("material.emissionStrength", emissionStrength);
         lightingShader.setVec3("material.emissionColor", 0.0f, 0.0f, 1.0f);
 
         // view/projection transformations
@@ -467,7 +463,6 @@ int main()
         glm::mat4 model = glm::mat4(1.0f);
         lightingShader.setMat4("model", model);
 
-
         glActiveTexture(GL_TEXTURE0);             // activate the texture unit first before binding texture
         glBindTexture(GL_TEXTURE_2D, diffuseMap); // bind the diffuse map texture
 
@@ -476,9 +471,6 @@ int main()
 
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, emissionMap); // bind the emission map texture
-
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, lightcookie);
 
         // render the cubes
         glBindVertexArray(cubeVAO);

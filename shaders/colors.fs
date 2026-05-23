@@ -1,4 +1,13 @@
 #version 330 core
+struct Material {
+    sampler2D diffuse; // the diffuse texture of the material, which is the base color of the surface
+    sampler2D specular; // the specular texture of the material, which is used to create highlights on shiny surfaces
+    sampler2D emission; // the emission texture of the material, which is used to create a glowing effect on the surface, it adds light to the scene without being affected by the lighting calculations
+    vec3 emissionColor; // the color of the emission, which is a multiplier for the emission texture, it allows you to control the color of the light emitted by the surface
+    float emissionStrength; // the strength of the emission, which is a multiplier for the emission texture, it allows you to control how much light the surface emits
+    float shininess; // scattering/radius of the specular highlight, the higher the number the smaller and sharper the highlight, the lower the number the larger and duller the highlight
+};
+
 struct DirLight {
     vec3 direction;
   
@@ -6,9 +15,6 @@ struct DirLight {
     vec3 diffuse;
     vec3 specular;
 };  
-uniform DirLight dirLight;
-
-vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);  
 
 struct PointLight {    
     vec3 position;
@@ -21,10 +27,6 @@ struct PointLight {
     vec3 diffuse;
     vec3 specular;
 };  
-#define NR_POINT_LIGHTS 4  
-uniform PointLight pointLights[NR_POINT_LIGHTS];
-
-vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);  
 
 struct SpotLight {
     vec3 position;
@@ -41,30 +43,28 @@ struct SpotLight {
     vec3 specular;       
 };
 
-uniform SpotLight spotLight;
-
-vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
-
-struct Material {
-    sampler2D diffuse; // the diffuse texture of the material, which is the base color of the surface
-    sampler2D specular; // the specular texture of the material, which is used to create highlights on shiny surfaces
-    sampler2D emission; // the emission texture of the material, which is used to create a glowing effect on the surface, it adds light to the scene without being affected by the lighting calculations
-    vec3 emissionColor; // the color of the emission, which is a multiplier for the emission texture, it allows you to control the color of the light emitted by the surface
-    float emissionStrength; // the strength of the emission, which is a multiplier for the emission texture, it allows you to control how much light the surface emits
-    float shininess; // scattering/radius of the specular highlight, the higher the number the smaller and sharper the highlight, the lower the number the larger and duller the highlight
-};
-
-
-uniform Material material;
-
+//out
 out vec4 FragColor;
 
+//struct uniforms
+uniform DirLight dirLight;
+#define NR_POINT_LIGHTS 4  
+uniform PointLight pointLights[NR_POINT_LIGHTS];
+uniform SpotLight spotLight;
+uniform Material material;
+
+//prototypes
+vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);  
+vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);  
+vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
+
+//ins
 in vec3 Normal;  
 in vec3 FragPos;  
 in vec2 TexCoords;
 
+//uniforms
 uniform vec3 viewPos;
-uniform mat4 lightSpaceMatrix;
 
 void main()
 {
@@ -79,6 +79,17 @@ void main()
         result += CalcPointLight(pointLights[i], norm, FragPos, viewDir);    
     // phase 3: Spot light
     result += CalcSpotLight(spotLight, norm, FragPos, viewDir);    
+
+     // 1. Fetch the raw texture color
+    vec3 emTex = texture(material.emission, TexCoords).rgb;
+    // 2. Find the brightness of the pixel (0.0 to 1.0)
+    // This turns your green shapes into a white mask, and background stays black
+    float mask = max(emTex.r, max(emTex.g, emTex.b)); 
+    // 3. Multiply the mask by your new color and strength
+    // Now black stays black, and the green shapes become full blue
+    vec3 emission = mask * material.emissionColor * material.emissionStrength;
+
+    result += emission;
     
     FragColor = vec4(result, 1.0);
 }
