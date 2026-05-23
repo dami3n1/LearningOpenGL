@@ -102,8 +102,10 @@ unsigned int loadTexture(char const *path)
         // s,t,r = x,y,z
         // texture wrapping/filtering/mipmap options
         // wrapping repeats the image horizontally and vertically
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+        float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);  
         // filtering blends the colors of the texture when the texture is scaled up or down
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         // blends colors but no mipmap option (only works when downscaling)
@@ -387,10 +389,28 @@ int main()
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        glm::vec3 spotPos;
+        glm::vec3 spotDir;
+
+        spotPos = lightPos;
+        spotDir = glm::vec3(0.0f, 0.0f, -1.0f);
+        //camera flashlight type
+        //spotPos = camera.Position;
+        //spotDir = camera.Front;
+
         // be sure to activate shader when setting uniforms/drawing objects
         lightingShader.use();
-        lightingShader.setVec3("light.position", camera.Position);
-        lightingShader.setVec3("light.direction", camera.Front);
+        lightingShader.setVec3("light.position", spotPos);
+        lightingShader.setVec3("light.direction", spotDir);
+
+        glm::mat4 lightProjection = glm::perspective(glm::radians(45.0f),1.0f,0.1f,50.0f);
+
+        glm::mat4 lightView = glm::lookAt(spotPos, spotPos + spotDir, glm::vec3(0.0f, 1.0f, 0.0f));
+
+        glm::mat4 lightSpaceMatrix = lightProjection * lightView;
+
+        lightingShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+
         // We compare cosine values instead of angles because dot products return cosines, which avoids expensive angle calculations.
         lightingShader.setFloat("light.cutOff", glm::cos(glm::radians(12.5f)));
         lightingShader.setFloat("light.outerCutOff", glm::cos(glm::radians(17.5f)));
@@ -403,6 +423,7 @@ int main()
         lightingShader.setFloat("light.constant", 1.0f);
         lightingShader.setFloat("light.linear", 0.09f);
         lightingShader.setFloat("light.quadratic", 0.032f);
+        lightingShader.setFloat("light.brightness", 1.0f);
 
         lightingShader.setVec2("viewPort", SCREEN_WIDTH, SCREEN_HEIGHT);
 
@@ -412,7 +433,7 @@ int main()
         float time = glfwGetTime();
         float emissionStrength = (sin(time) * 0.5 + 0.5) * 2.0f; // oscillates between 0 and 2
 
-        lightingShader.setFloat("material.emissionStrength", emissionStrength);
+        lightingShader.setFloat("material.emissionStrength", 0.f);
         lightingShader.setVec3("material.emissionColor", 0.0f, 0.0f, 1.0f);
 
         // view/projection transformations

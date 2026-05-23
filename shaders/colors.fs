@@ -36,7 +36,7 @@ in vec3 FragPos;
 in vec2 TexCoords;
 
 uniform vec3 viewPos;
-uniform vec2 viewPort;
+uniform mat4 lightSpaceMatrix;
 
 void main()
 {
@@ -74,14 +74,14 @@ void main()
     float epsilon = light.cutOff - light.outerCutOff;
     float intensity = smoothstep(0.0, 1.0, (theta - light.outerCutOff) / epsilon);
     
-    vec2 fragCoord = gl_FragCoord.xy / viewPort;
-    fragCoord.y = 1.0 - fragCoord.y;
+    vec4 proj = lightSpaceMatrix * vec4(FragPos, 1.0);
+    proj.xyz /= proj.w;
 
-    // zoom amount
-    float scale = 0.65;
-    fragCoord = (fragCoord - 0.5) / scale + 0.5;
-
-    intensity *= length(texture(light.cookie, fragCoord).rgb);
+    vec2 cookieUV = proj.xy * 0.5 + 0.5;
+    cookieUV = (cookieUV - 0.5) * 1.0 + 0.5;
+    cookieUV.y = 1.0 - cookieUV.y;
+    vec3 cookie = texture(light.cookie, cookieUV).rgb;
+    diffuse *= cookie;
 
     diffuse *= intensity;
     specular *= intensity;
