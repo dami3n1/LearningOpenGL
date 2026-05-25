@@ -19,9 +19,16 @@ FetchContent_Declare(
     GIT_TAG        v1.92.7   # or latest stable release
 )
 
+FetchContent_Declare(
+    assimp
+    GIT_REPOSITORY https://github.com/assimp/assimp
+    GIT_TAG        v6.0.5   # or latest stable release
+)
+
 # Make the content available
 FetchContent_MakeAvailable(glfw)
 FetchContent_MakeAvailable(imgui)
+FetchContent_MakeAvailable(assimp)
 
 file(GLOB IMGUI_SOURCES
     ${imgui_SOURCE_DIR}/*.cpp
@@ -56,4 +63,11 @@ file(GLOB_RECURSE SOURCES
 add_executable(MyApp ${SOURCES})
 
 set(GLFW_BUILD_SHARED_LIBS OFF CACHE BOOL "Build GLFW as static library")
-target_link_libraries(MyApp PRIVATE glfw glad glm::glm OpenGL::GL imgui)
+target_link_libraries(MyApp PRIVATE 
+glfw 
+glad 
+glm::glm
+OpenGL::GL 
+imgui 
+assimp
+)
