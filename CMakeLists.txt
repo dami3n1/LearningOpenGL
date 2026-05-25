@@ -24,11 +24,26 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/assimp/assimp
     GIT_TAG        v6.0.5   # or latest stable release
 )
+set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_INSTALL OFF CACHE BOOL "" FORCE)
+set(ASSIMP_WARNINGS_AS_ERRORS OFF CACHE BOOL "" FORCE)
+
+# Disable everything by default
+set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT OFF CACHE BOOL "" FORCE)
+
+# Enable only what you likely need
+set(ASSIMP_BUILD_OBJ_IMPORTER ON CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_FBX_IMPORTER ON CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_GLTF_IMPORTER ON CACHE BOOL "" FORCE)
 
 # Make the content available
 FetchContent_MakeAvailable(glfw)
 FetchContent_MakeAvailable(imgui)
 FetchContent_MakeAvailable(assimp)
+
+#assimp optimization
+target_compile_options(assimp PRIVATE -O2)#ultra performance: -O3 and -flto
 
 file(GLOB IMGUI_SOURCES
     ${imgui_SOURCE_DIR}/*.cpp

@@ -2,6 +2,7 @@
 #include <iostream>
 #include <iomanip>
 #include <ostream>
+#include <chrono>
 
 #include "shader_reader.h"
 #include <glm/glm.hpp>
@@ -196,7 +197,6 @@ int main()
     }
 
     Shader lightingShader("../shaders/colors.vs", "../shaders/colors.fs");
-    Shader ourShader("../shaders/colors2.vs", "../shaders/colors2.fs");
     Shader lightCubeShader("../shaders/light_cube.vs", "../shaders/light_cube.fs");
 
     float vertices[] = {
@@ -274,7 +274,13 @@ int main()
     glEnable(GL_DEPTH_TEST); // enable depth testing for 3D
     stbi_set_flip_vertically_on_load(true);
 
-    Model ourModel("../assets/backpack/backpack.obj");
+    auto t0 = std::chrono::high_resolution_clock::now();
+Model ourModel("../assets/Sponza-master/sponza.obj");
+auto t1 = std::chrono::high_resolution_clock::now();
+
+std::cout << "Total load: "
+          << std::chrono::duration<double>(t1 - t0).count()
+          << "s\n";
 
     // render loop
     while (!glfwWindowShouldClose(window))
@@ -300,25 +306,18 @@ int main()
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // don't forget to enable shader before setting uniforms
-        ourShader.use();
+        // be sure to activate shader when setting uniforms/drawing objects
+        lightingShader.use();
         
-        // view/projection transformations
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
-        glm::mat4 view = camera.GetViewMatrix();
-        ourShader.setMat4("projection", projection);
-        ourShader.setMat4("view", view);
+        
 
         // render the loaded model
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-        model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
-        ourShader.setMat4("model", model);
-        ourModel.Draw(ourShader);
+        model = glm::scale(model, glm::vec3(0.015625f, 0.015625f, 0.015625f));	// it's a bit too big for our scene, so scale it down
+        lightingShader.setMat4("model", model);
+        ourModel.Draw(lightingShader);
         
-        // be sure to activate shader when setting uniforms/drawing objects
-        lightingShader.use();
-
         // directional light
         lightingShader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
         lightingShader.setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
@@ -380,7 +379,8 @@ int main()
         lightingShader.setVec3("material.emissionColor", 0.0f, 0.0f, 1.0f);
 
         // view/projection transformations
-        
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.01f, 200.0f);
+        glm::mat4 view = camera.GetViewMatrix();
         lightingShader.setMat4("projection", projection);
         lightingShader.setMat4("view", view);
 

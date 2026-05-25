@@ -78,7 +78,7 @@ void main()
     for(int i = 0; i < NR_POINT_LIGHTS; i++)
         result += CalcPointLight(pointLights[i], norm, FragPos, viewDir);    
     // phase 3: Spot light
-    result += CalcSpotLight(spotLight, norm, FragPos, viewDir);    
+    //result += CalcSpotLight(spotLight, norm, FragPos, viewDir);    
 
      // 1. Fetch the raw texture color
     vec3 emTex = texture(material.emission, TexCoords).rgb;
