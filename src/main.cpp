@@ -233,8 +233,8 @@ int main() {
         return -1;
     }
 
-    Shader lightingShader("../shaders/colors.vs", "../shaders/colors.fs");
-    Shader lightCubeShader("../shaders/light_cube.vs", "../shaders/light_cube.fs");
+    Shader lightingShader("../shaders/colors.vert", "../shaders/colors.frag");
+    Shader lightCubeShader("../shaders/light_cube.vert", "../shaders/light_cube.frag");
 
     float vertices[] = {
         // positions
@@ -459,9 +459,11 @@ int main() {
         lightingShader.setMat4("model", model);
         // Point lights
         for (int i = 0; i < 4; i++) {
+            lightCubeShader.use();
             model = glm::mat4(1.0f);
             model = glm::translate(model, pointLights[i].position);
             model = glm::scale(model, glm::vec3(0.2f)); // Make it a smaller cube
+            lightCubeShader.setVec3("color", pointLights[i].enabled ? pointLights[i].diffuse : glm::vec3(0.0f));
             lightCubeShader.setMat4("model", model);
             glDrawArrays(GL_TRIANGLES, 0, 36);
 
