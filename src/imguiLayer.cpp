@@ -83,7 +83,7 @@ void imguiLayer::customWindow1(float &mixValue, float &fov, bool &customRatio, f
     ImGui::PlotLines("FPS (Instant)", fpsHistory, 120, index, nullptr, 0.0f, 200.0f, ImVec2(0, 80));
     ImGui::PlotLines("FPS (Average)", avgHistory, 120, index, nullptr, 0.0f, 200.0f, ImVec2(0, 80));
 
-    
+
 
     ImGui::End();
     // Rendering

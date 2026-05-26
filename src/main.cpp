@@ -40,8 +40,7 @@ float lastFrame = 0.0f;
 
 glm::vec3 lightPos(1.2f, 0.0f, 2.0f);
 
-struct DirectionalLight
-{
+struct DirectionalLight {
     glm::vec3 direction = glm::vec3(-0.2f, -1.0f, -0.3f);
 
     glm::vec3 ambient = glm::vec3(0.05f);
@@ -51,8 +50,7 @@ struct DirectionalLight
     bool enabled = true;
 };
 
-struct PointLight
-{
+struct PointLight {
     glm::vec3 position;
 
     glm::vec3 ambient = glm::vec3(0.05f);
@@ -66,8 +64,7 @@ struct PointLight
     bool enabled = true;
 };
 
-struct SpotLight
-{
+struct SpotLight {
     glm::vec3 ambient = glm::vec3(0.0f);
     glm::vec3 diffuse = glm::vec3(1.0f);
     glm::vec3 specular = glm::vec3(1.0f);
@@ -85,11 +82,12 @@ struct SpotLight
 DirectionalLight dirLight;
 
 PointLight pointLights[4] =
-    {
-        {glm::vec3(0.7f, 0.2f, 2.0f)},
-        {glm::vec3(2.3f, -3.3f, -4.0f)},
-        {glm::vec3(-4.0f, 2.0f, -12.0f)},
-        {glm::vec3(0.0f, 0.0f, -3.0f)}};
+{
+    {glm::vec3(0.7f, 0.2f, 2.0f)},
+    {glm::vec3(2.3f, -3.3f, -4.0f)},
+    {glm::vec3(-4.0f, 2.0f, -12.0f)},
+    {glm::vec3(0.0f, 0.0f, -3.0f)}
+};
 
 SpotLight spotLight;
 
@@ -99,16 +97,14 @@ float shininess = 32.0f;
 
 // glfw: whenever the mouse moves, this callback is called
 // -------------------------------------------------------
-void mouse_callback(GLFWwindow *window, double xposIn, double yposIn)
-{
+void mouse_callback(GLFWwindow *window, double xposIn, double yposIn) {
     if (imguitoggle)
         return;
 
     float xpos = static_cast<float>(xposIn);
     float ypos = static_cast<float>(yposIn);
 
-    if (firstMouse)
-    {
+    if (firstMouse) {
         lastX = xpos;
         lastY = ypos;
         firstMouse = false;
@@ -125,24 +121,20 @@ void mouse_callback(GLFWwindow *window, double xposIn, double yposIn)
 
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
 // ----------------------------------------------------------------------
-void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
-{
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
     camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
 
-void processInput(GLFWwindow *window)
-{
+void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-    {
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
         mixValue += 0.02f; // change this value accordingly (might be too slow or too fast based on system hardware)
         if (mixValue >= 1.0f)
             mixValue = 1.0f;
     }
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-    {
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
         mixValue -= 0.02f; // change this value accordingly (might be too slow or too fast based on system hardware)
         if (mixValue <= 0.0f)
             mixValue = 0.0f;
@@ -153,31 +145,25 @@ void processInput(GLFWwindow *window)
 
     int tabState = glfwGetKey(window, GLFW_KEY_TAB);
 
-    if (tabState == GLFW_PRESS && !tabwasPressed)
-    {
+    if (tabState == GLFW_PRESS && !tabwasPressed) {
         tabwasPressed = true;
 
         imguitoggle = !imguitoggle;
 
         ImGuiIO &io = ImGui::GetIO();
 
-        if (imguitoggle)
-        {
+        if (imguitoggle) {
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
             io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
-        }
-        else
-        {
+        } else {
             io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
 
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
             firstMouse = true;
         }
-    }
-    else if (tabState == GLFW_RELEASE)
-    {
+    } else if (tabState == GLFW_RELEASE) {
         tabwasPressed = false;
     }
 
@@ -209,17 +195,13 @@ void processInput(GLFWwindow *window)
     mixValue = std::clamp(mixValue, 0.0f, 1.0f);
 }
 
-int main()
-{
-
-    if (!windowSystem::glfw_init())
-    {
+int main() {
+    if (!windowSystem::glfw_init()) {
         logger(ERROR, "windowSystem::Failed to initialize GLFW");
         return -1; // or stop engine
     }
     GLFWwindow *window = windowSystem::makeWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "OpenGL Window");
-    if (!window)
-    {
+    if (!window) {
         logger(ERROR, "windowSystem::Failed to create GLFW window");
         windowSystem::glfw_shutdown();
         return -1;
@@ -238,8 +220,7 @@ int main()
     // initialize GLAD before we can use any opengl functions
     // cast's the glfw function which gives the OS specific function for GLAD to find
     // the OpenGL function pointer (memory address of opengl executable command)(hardware specific)
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
+    if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
         logger(ERROR, "Failed to initialize GLAD");
         return -1;
     }
@@ -247,8 +228,7 @@ int main()
     glfwGetFramebufferSize(window, &SCREEN_WIDTH, &SCREEN_HEIGHT);
     glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-    if (!imguiLayer::imguiSetup(window))
-    {
+    if (!imguiLayer::imguiSetup(window)) {
         logger(ERROR, "Failed to initialize ImGui");
         return -1;
     }
@@ -298,7 +278,8 @@ int main()
         0.5f, 0.5f, 0.5f,
         0.5f, 0.5f, 0.5f,
         -0.5f, 0.5f, 0.5f,
-        -0.5f, 0.5f, -0.5f};
+        -0.5f, 0.5f, -0.5f
+    };
 
     // first, configure the cube's VAO (and VBO)
     unsigned int VBO, lightCubeVAO;
@@ -311,7 +292,7 @@ int main()
     glBindVertexArray(lightCubeVAO);
 
     // note that we update the lamp's position attribute's stride to reflect the updated buffer data
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *) 0);
     glEnableVertexAttribArray(0);
 
     controller.showControllers();
@@ -331,20 +312,19 @@ int main()
     auto t1 = std::chrono::high_resolution_clock::now();
 
     std::cout << "Total load: "
-              << std::chrono::duration<double>(t1 - t0).count()
-              << "s\n";
+            << std::chrono::duration<double>(t1 - t0).count()
+            << "s\n";
 
-     t0 = std::chrono::high_resolution_clock::now();
+    t0 = std::chrono::high_resolution_clock::now();
     Model ourModel2("../assets/untitled.obj");
-     t1 = std::chrono::high_resolution_clock::now();
+    t1 = std::chrono::high_resolution_clock::now();
 
     std::cout << "Total load: "
-              << std::chrono::duration<double>(t1 - t0).count()
-              << "s\n";
+            << std::chrono::duration<double>(t1 - t0).count()
+            << "s\n";
 
     // render loop
-    while (!glfwWindowShouldClose(window))
-    {
+    while (!glfwWindowShouldClose(window)) {
         glfwPollEvents(); // processes events received in window and returns a response(if requested)
         // input function called each frame
         processInput(window);
@@ -354,73 +334,50 @@ int main()
         lastFrame = currentFrame;
 
         glfwGetFramebufferSize(window, &width, &height);
-        SCREEN_WIDTH = (float)width;
-        SCREEN_HEIGHT = (float)height;
+        SCREEN_WIDTH = (float) width;
+        SCREEN_HEIGHT = (float) height;
 
         imguiLayer::imguiRender();
         ImGui::NewFrame();
-        
         {
             ImGui::Begin("Lighting Editor");
 
             ImGui::Text("Directional Light");
-
             ImGui::Checkbox("Enable Dir Light", &dirLight.enabled);
-
             ImGui::DragFloat3("Dir Direction", glm::value_ptr(dirLight.direction), 0.1f);
-
             ImGui::ColorEdit3("Dir Ambient", glm::value_ptr(dirLight.ambient));
             ImGui::ColorEdit3("Dir Diffuse", glm::value_ptr(dirLight.diffuse));
             ImGui::ColorEdit3("Dir Specular", glm::value_ptr(dirLight.specular));
 
             ImGui::Separator();
 
-            for (int i = 0; i < 4; i++)
-            {
+            for (int i = 0; i < 4; i++) {
                 std::string label = "Point Light " + std::to_string(i);
 
-                if (ImGui::TreeNode(label.c_str()))
-                {
+                if (ImGui::TreeNode(label.c_str())) {
                     std::string enabled = "Enabled##" + std::to_string(i);
                     ImGui::Checkbox(enabled.c_str(), &pointLights[i].enabled);
 
                     std::string pos = "Position##" + std::to_string(i);
-                    ImGui::DragFloat3(pos.c_str(),
-                                      glm::value_ptr(pointLights[i].position),
-                                      0.1f);
+                    ImGui::DragFloat3(pos.c_str(), glm::value_ptr(pointLights[i].position), 0.1f);
 
                     std::string ambient = "Ambient##" + std::to_string(i);
-                    ImGui::ColorEdit3(ambient.c_str(),
-                                      glm::value_ptr(pointLights[i].ambient));
+                    ImGui::ColorEdit3(ambient.c_str(), glm::value_ptr(pointLights[i].ambient));
 
                     std::string diffuse = "Diffuse##" + std::to_string(i);
-                    ImGui::ColorEdit3(diffuse.c_str(),
-                                      glm::value_ptr(pointLights[i].diffuse));
+                    ImGui::ColorEdit3(diffuse.c_str(), glm::value_ptr(pointLights[i].diffuse));
 
                     std::string specular = "Specular##" + std::to_string(i);
-                    ImGui::ColorEdit3(specular.c_str(),
-                                      glm::value_ptr(pointLights[i].specular));
+                    ImGui::ColorEdit3(specular.c_str(), glm::value_ptr(pointLights[i].specular));
 
                     std::string constant = "Constant##" + std::to_string(i);
-                    ImGui::DragFloat(constant.c_str(),
-                                     &pointLights[i].constant,
-                                     0.01f,
-                                     0.0f,
-                                     5.0f);
+                    ImGui::DragFloat(constant.c_str(), &pointLights[i].constant, 0.01f, 0.0f, 5.0f);
 
                     std::string linear = "Linear##" + std::to_string(i);
-                    ImGui::DragFloat(linear.c_str(),
-                                     &pointLights[i].linear,
-                                     0.001f,
-                                     0.0f,
-                                     1.0f);
+                    ImGui::DragFloat(linear.c_str(), &pointLights[i].linear, 0.001f, 0.0f, 1.0f);
 
                     std::string quadratic = "Quadratic##" + std::to_string(i);
-                    ImGui::DragFloat(quadratic.c_str(),
-                                     &pointLights[i].quadratic,
-                                     0.001f,
-                                     0.0f,
-                                     1.0f);
+                    ImGui::DragFloat(quadratic.c_str(), &pointLights[i].quadratic, 0.001f, 0.0f, 1.0f);
 
                     ImGui::TreePop();
                 }
@@ -432,57 +389,29 @@ int main()
 
             ImGui::Checkbox("Enable Spotlight", &spotLight.enabled);
 
-            ImGui::ColorEdit3("Spot Ambient",
-                              glm::value_ptr(spotLight.ambient));
+            ImGui::ColorEdit3("Spot Ambient", glm::value_ptr(spotLight.ambient));
+            ImGui::ColorEdit3("Spot Diffuse", glm::value_ptr(spotLight.diffuse));
+            ImGui::ColorEdit3("Spot Specular", glm::value_ptr(spotLight.specular));
 
-            ImGui::ColorEdit3("Spot Diffuse",
-                              glm::value_ptr(spotLight.diffuse));
+            ImGui::DragFloat("Spot Constant", &spotLight.constant, 0.01f);
+            ImGui::DragFloat("Spot Linear", &spotLight.linear, 0.001f);
+            ImGui::DragFloat("Spot Quadratic", &spotLight.quadratic, 0.001f);
 
-            ImGui::ColorEdit3("Spot Specular",
-                              glm::value_ptr(spotLight.specular));
-
-            ImGui::DragFloat("Spot Constant",
-                             &spotLight.constant,
-                             0.01f);
-
-            ImGui::DragFloat("Spot Linear",
-                             &spotLight.linear,
-                             0.001f);
-
-            ImGui::DragFloat("Spot Quadratic",
-                             &spotLight.quadratic,
-                             0.001f);
-
-            ImGui::SliderFloat("CutOff",
-                               &spotLight.cutOff,
-                               0.0f,
-                               45.0f);
-
-            ImGui::SliderFloat("Outer CutOff",
-                               &spotLight.outerCutOff,
-                               0.0f,
-                               45.0f);
+            ImGui::SliderFloat("CutOff", &spotLight.cutOff, 0.0f, 45.0f);
+            ImGui::SliderFloat("Outer CutOff", &spotLight.outerCutOff, 0.0f, 45.0f);
 
             ImGui::Separator();
 
             ImGui::Text("Material");
 
-            ImGui::SliderFloat("Shininess",
-                               &shininess,
-                               1.0f,
-                               256.0f);
+            ImGui::SliderFloat("Shininess", &shininess, 1.0f, 256.0f);
 
-            ImGui::ColorEdit3("Emission Color",
-                              glm::value_ptr(emissionColor));
+            ImGui::ColorEdit3("Emission Color", glm::value_ptr(emissionColor));
 
-            ImGui::SliderFloat("Emission Strength",
-                               &emissionStrength,
-                               0.0f,
-                               10.0f);
+            ImGui::SliderFloat("Emission Strength", &emissionStrength, 0.0f, 10.0f);
 
             ImGui::End();
         }
-        // imguiLayer::customWindow1(mixValue, fov, customaspectratio, aspectRatioX, aspectRatioY, cameraPos.x, cameraPos.y, cameraPos.z, direction.x, direction.y, direction.z, deltaTime);
 
         controller.update();
 
@@ -491,145 +420,84 @@ int main()
 
         // be sure to activate shader when setting uniforms/drawing objects
         lightingShader.use();
+        // view/projection transformations
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float) SCREEN_WIDTH / (float) SCREEN_HEIGHT,
+                                                0.01f, 200.0f);
+        glm::mat4 view = camera.GetViewMatrix();
+        lightingShader.setMat4("projection", projection);
+        lightingShader.setMat4("view", view);
 
         // render the loaded model
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));            // translate it down so it's at the center of the scene
-        model = glm::scale(model, glm::vec3(0.015625f, 0.015625f, 0.015625f)); // it's a bit too big for our scene, so scale it down
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+        // translate it down so it's at the center of the scene
+        model = glm::scale(model, glm::vec3(0.015625f, 0.015625f, 0.015625f));
+        // it's a bit too big for our scene, so scale it down
         lightingShader.setMat4("model", model);
         ourModel.Draw(lightingShader);
 
         // render the loaded model
         model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));            // translate it down so it's at the center of the scene
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+        // translate it down so it's at the center of the scene
         model = glm::scale(model, glm::vec3(1.f, 1.f, 1.f)); // it's a bit too big for our scene, so scale it down
         lightingShader.setMat4("model", model);
         ourModel2.Draw(lightingShader);
 
         // Directional light
         lightingShader.setVec3("dirLight.direction", dirLight.direction);
+        lightingShader.setVec3("dirLight.ambient", dirLight.enabled ? dirLight.ambient : glm::vec3(0.0f));
+        lightingShader.setVec3("dirLight.diffuse", dirLight.enabled ? dirLight.diffuse : glm::vec3(0.0f));
+        lightingShader.setVec3("dirLight.specular", dirLight.enabled ? dirLight.specular : glm::vec3(0.0f));
 
-        lightingShader.setVec3(
-            "dirLight.ambient",
-            dirLight.enabled ? dirLight.ambient : glm::vec3(0.0f));
-
-        lightingShader.setVec3(
-            "dirLight.diffuse",
-            dirLight.enabled ? dirLight.diffuse : glm::vec3(0.0f));
-
-        lightingShader.setVec3(
-            "dirLight.specular",
-            dirLight.enabled ? dirLight.specular : glm::vec3(0.0f));
-
-        // Point lights
-        for (int i = 0; i < 4; i++)
-        {
-            std::string index = "pointLights[" + std::to_string(i) + "]";
-
-            lightingShader.setVec3(index + ".position",
-                                   pointLights[i].position);
-
-            lightingShader.setVec3(
-                index + ".ambient",
-                pointLights[i].enabled
-                    ? pointLights[i].ambient
-                    : glm::vec3(0.0f));
-
-            lightingShader.setVec3(
-                index + ".diffuse",
-                pointLights[i].enabled
-                    ? pointLights[i].diffuse
-                    : glm::vec3(0.0f));
-
-            lightingShader.setVec3(
-                index + ".specular",
-                pointLights[i].enabled
-                    ? pointLights[i].specular
-                    : glm::vec3(0.0f));
-
-            lightingShader.setFloat(index + ".constant",
-                                    pointLights[i].constant);
-
-            lightingShader.setFloat(index + ".linear",
-                                    pointLights[i].linear);
-
-            lightingShader.setFloat(index + ".quadratic",
-                                    pointLights[i].quadratic);
-        }
-
-        // Spotlight
-        lightingShader.setVec3("spotLight.position", camera.Position);
-        lightingShader.setVec3("spotLight.direction", camera.Front);
-
-        lightingShader.setVec3(
-            "spotLight.ambient",
-            spotLight.enabled
-                ? spotLight.ambient
-                : glm::vec3(0.0f));
-
-        lightingShader.setVec3(
-            "spotLight.diffuse",
-            spotLight.enabled
-                ? spotLight.diffuse
-                : glm::vec3(0.0f));
-
-        lightingShader.setVec3(
-            "spotLight.specular",
-            spotLight.enabled
-                ? spotLight.specular
-                : glm::vec3(0.0f));
-
-        lightingShader.setFloat("spotLight.constant",
-                                spotLight.constant);
-
-        lightingShader.setFloat("spotLight.linear",
-                                spotLight.linear);
-
-        lightingShader.setFloat("spotLight.quadratic",
-                                spotLight.quadratic);
-
-        lightingShader.setFloat(
-            "spotLight.cutOff",
-            glm::cos(glm::radians(spotLight.cutOff)));
-
-        lightingShader.setFloat(
-            "spotLight.outerCutOff",
-            glm::cos(glm::radians(spotLight.outerCutOff)));
-
-        lightingShader.setVec3("viewPos", camera.Position);
-
-        lightingShader.setFloat("material.shininess",
-                                shininess);
-
-        lightingShader.setFloat("material.emissionStrength",
-                                emissionStrength);
-
-        lightingShader.setVec3("material.emissionColor",
-                               emissionColor);
-
-        // view/projection transformations
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.01f, 200.0f);
-        glm::mat4 view = camera.GetViewMatrix();
-        lightingShader.setMat4("projection", projection);
-        lightingShader.setMat4("view", view);
-
-        glBindVertexArray(lightCubeVAO);
-        model = glm::mat4(1.0f);
-        lightingShader.setMat4("model", model);
-
-        // also draw the lamp object
+        //use lightcube shader for the cube light
         lightCubeShader.use();
         lightCubeShader.setMat4("projection", projection);
         lightCubeShader.setMat4("view", view);
-
-        for (unsigned int i = 0; i < 4; i++)
-        {
+        glBindVertexArray(lightCubeVAO);
+        model = glm::mat4(1.0f);
+        lightingShader.setMat4("model", model);
+        // Point lights
+        for (int i = 0; i < 4; i++) {
             model = glm::mat4(1.0f);
             model = glm::translate(model, pointLights[i].position);
             model = glm::scale(model, glm::vec3(0.2f)); // Make it a smaller cube
             lightCubeShader.setMat4("model", model);
             glDrawArrays(GL_TRIANGLES, 0, 36);
+
+            //switch back to using the lighting shader
+            lightingShader.use();
+            std::string index = "pointLights[" + std::to_string(i) + "]";
+            lightingShader.setVec3(index + ".position", pointLights[i].position);
+            lightingShader.setVec3(index + ".ambient",
+                                   pointLights[i].enabled ? pointLights[i].ambient : glm::vec3(0.0f));
+            lightingShader.setVec3(index + ".diffuse",
+                                   pointLights[i].enabled ? pointLights[i].diffuse : glm::vec3(0.0f));
+            lightingShader.setVec3(index + ".specular",
+                                   pointLights[i].enabled ? pointLights[i].specular : glm::vec3(0.0f));
+            lightingShader.setFloat(index + ".constant", pointLights[i].constant);
+            lightingShader.setFloat(index + ".linear", pointLights[i].linear);
+            lightingShader.setFloat(index + ".quadratic", pointLights[i].quadratic);
         }
+
+        // Spotlight
+        lightingShader.setVec3("spotLight.position", camera.Position);
+        lightingShader.setVec3("spotLight.direction", camera.Front);
+        lightingShader.setVec3("spotLight.ambient", spotLight.enabled ? spotLight.ambient : glm::vec3(0.0f));
+        lightingShader.setVec3("spotLight.diffuse", spotLight.enabled ? spotLight.diffuse : glm::vec3(0.0f));
+        lightingShader.setVec3("spotLight.specular", spotLight.enabled ? spotLight.specular : glm::vec3(0.0f));
+        lightingShader.setFloat("spotLight.constant", spotLight.constant);
+        lightingShader.setFloat("spotLight.linear", spotLight.linear);
+        lightingShader.setFloat("spotLight.quadratic", spotLight.quadratic);
+        lightingShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(spotLight.cutOff)));
+        lightingShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(spotLight.outerCutOff)));
+        lightingShader.setVec3("viewPos", camera.Position);
+
+        //material
+        lightingShader.setFloat("material.shininess", shininess);
+        lightingShader.setFloat("material.emissionStrength", emissionStrength);
+        lightingShader.setVec3("material.emissionColor", emissionColor);
+
         // Rendering
         // (Your code clears your framebuffer, renders your other stuff etc.)
         ImGui::Render();

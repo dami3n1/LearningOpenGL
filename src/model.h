@@ -24,38 +24,37 @@ using namespace std;
 
 unsigned int TextureFromFile(const char *path, const string &directory, bool gamma = false);
 
-class Model
-{
+class Model {
 public:
     // vector = dynamic list container
     // <Type> = what kind of data the vector stores
     // Example: vector<Vertex> stores Vertex objects
     // model data
-    vector<Texture> textures_loaded; // stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
+    vector<Texture> textures_loaded;
+    // stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
     vector<Mesh> meshes;
     string directory;
     bool gammaCorrection;
 
     // constructor, expects a filepath to a 3D model.
-    Model(string const &path, bool gamma = false) : gammaCorrection(gamma)
-    {
+    Model(string const &path, bool gamma = false) : gammaCorrection(gamma) {
         loadModel(path);
     }
 
     // draws the model, and thus all its meshes
-    void Draw(Shader &shader)
-    {
+    void Draw(Shader &shader) {
         for (unsigned int i = 0; i < meshes.size(); i++)
             meshes[i].Draw(shader);
     }
 
 private:
     // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
-    void loadModel(string const &path)
-    {
+    void loadModel(string const &path) {
         // read file via ASSIMP
         Assimp::Importer importer;
-        const aiScene *scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace | aiProcess_OptimizeMeshes);
+        const aiScene *scene = importer.ReadFile(
+            path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace |
+                  aiProcess_OptimizeMeshes);
         // check for errors
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero
         {
@@ -70,43 +69,38 @@ private:
     }
 
     // processes a node in a recursive fashion. Processes each individual mesh located at the node and repeats this process on its children nodes (if any).
-    void processNode(aiNode *node, const aiScene *scene)
-    {
+    void processNode(aiNode *node, const aiScene *scene) {
         // process each mesh located at the current node
-        for (unsigned int i = 0; i < node->mNumMeshes; i++)
-        {
+        for (unsigned int i = 0; i < node->mNumMeshes; i++) {
             // the node object only contains indices to index the actual objects in the scene.
             // the scene contains all the data, node is just to keep stuff organized (like relations between nodes).
             aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
             meshes.push_back(processMesh(mesh, scene));
         }
         // after we've processed all of the meshes (if any) we then recursively process each of the children nodes
-        for (unsigned int i = 0; i < node->mNumChildren; i++)
-        {
+        for (unsigned int i = 0; i < node->mNumChildren; i++) {
             processNode(node->mChildren[i], scene);
         }
     }
 
-    Mesh processMesh(aiMesh *mesh, const aiScene *scene)
-    {
+    Mesh processMesh(aiMesh *mesh, const aiScene *scene) {
         // data to fill
         vector<Vertex> vertices;
         vector<unsigned int> indices;
         vector<Texture> textures;
 
         // walk through each of the mesh's vertices
-        for (unsigned int i = 0; i < mesh->mNumVertices; i++)
-        {
+        for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
             Vertex vertex;
-            glm::vec3 vector; // we declare a placeholder vector since assimp uses its own vector class that doesn't directly convert to glm's vec3 class so we transfer the data to this placeholder glm::vec3 first.
+            glm::vec3 vector;
+            // we declare a placeholder vector since assimp uses its own vector class that doesn't directly convert to glm's vec3 class so we transfer the data to this placeholder glm::vec3 first.
             // positions
             vector.x = mesh->mVertices[i].x;
             vector.y = mesh->mVertices[i].y;
             vector.z = mesh->mVertices[i].z;
             vertex.Position = vector;
             // normals
-            if (mesh->HasNormals())
-            {
+            if (mesh->HasNormals()) {
                 vector.x = mesh->mNormals[i].x;
                 vector.y = mesh->mNormals[i].y;
                 vector.z = mesh->mNormals[i].z;
@@ -131,15 +125,13 @@ private:
                 vector.y = mesh->mBitangents[i].y;
                 vector.z = mesh->mBitangents[i].z;
                 vertex.Bitangent = vector;
-            }
-            else
+            } else
                 vertex.TexCoords = glm::vec2(0.0f, 0.0f);
 
             vertices.push_back(vertex);
         }
         // now wak through each of the mesh's faces (a face is a mesh its triangle) and retrieve the corresponding vertex indices.
-        for (unsigned int i = 0; i < mesh->mNumFaces; i++)
-        {
+        for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
             aiFace face = mesh->mFaces[i];
             // retrieve all indices of the face and store them in the indices vector
             for (unsigned int j = 0; j < face.mNumIndices; j++)
@@ -173,41 +165,38 @@ private:
 
     // checks all material textures of a given type and loads the textures if they're not loaded yet.
     // the required info is returned as a Texture struct.
-    vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, string typeName)
-    {
+    vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, string typeName) {
         vector<Texture> textures;
-        for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
-        {
+        for (unsigned int i = 0; i < mat->GetTextureCount(type); i++) {
             // Assume texture paths in model files are relative to the model’s directory; concatenate the model directory with the texture path to form the full path (absolute texture paths from some online models may need manual conversion to local paths).
             aiString str;
             mat->GetTexture(type, i, &str); //retrueves texture location
             // check if texture was loaded before and if so, continue to next iteration: skip loading a new texture
             bool skip = false;
-            for (unsigned int j = 0; j < textures_loaded.size(); j++)
-            {
-                if (std::strcmp(textures_loaded[j].path.data(), str.C_Str()) == 0)
-                {
+            for (unsigned int j = 0; j < textures_loaded.size(); j++) {
+                if (std::strcmp(textures_loaded[j].path.data(), str.C_Str()) == 0) {
                     textures.push_back(textures_loaded[j]);
-                    skip = true; // a texture with the same filepath has already been loaded, continue to next one. (optimization)
+                    skip = true;
+                    // a texture with the same filepath has already been loaded, continue to next one. (optimization)
                     break;
                 }
             }
-            if (!skip)
-            { // if texture hasn't been loaded already, load it
+            if (!skip) {
+                // if texture hasn't been loaded already, load it
                 Texture texture;
                 texture.id = TextureFromFile(str.C_Str(), this->directory); //loads with stb
                 texture.type = typeName;
                 texture.path = str.C_Str();
                 textures.push_back(texture);
-                textures_loaded.push_back(texture); // store it as texture loaded for entire model, to ensure we won't unnecessary load duplicate textures.
+                textures_loaded.push_back(texture);
+                // store it as texture loaded for entire model, to ensure we won't unnecessary load duplicate textures.
             }
         }
         return textures;
     }
 };
 
-unsigned int TextureFromFile(const char *path, const string &directory, bool gamma)
-{
+unsigned int TextureFromFile(const char *path, const string &directory, bool gamma) {
     string filename = string(path);
     filename = directory + '/' + filename;
 
@@ -216,8 +205,7 @@ unsigned int TextureFromFile(const char *path, const string &directory, bool gam
 
     int width, height, nrComponents;
     unsigned char *data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
-    if (data)
-    {
+    if (data) {
         GLenum format;
         if (nrComponents == 1)
             format = GL_RED;
@@ -236,9 +224,7 @@ unsigned int TextureFromFile(const char *path, const string &directory, bool gam
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         stbi_image_free(data);
-    }
-    else
-    {
+    } else {
         std::cout << "Texture failed to load at path: " << path << std::endl;
         stbi_image_free(data);
     }
