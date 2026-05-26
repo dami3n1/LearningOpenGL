@@ -75,7 +75,11 @@ file(GLOB_RECURSE SOURCES
     "${CMAKE_SOURCE_DIR}/src/*.cpp"
 )
 
-add_executable(MyApp ${SOURCES})
+add_executable(MyApp ${SOURCES}
+        src/inputHandler.cpp
+        src/inputHandler.h
+        src/global.h
+        src/global.cpp)
 
 set(GLFW_BUILD_SHARED_LIBS OFF CACHE BOOL "Build GLFW as static library")
 target_link_libraries(MyApp PRIVATE 
