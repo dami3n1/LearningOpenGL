@@ -168,12 +168,12 @@ int main()
         1.0f, -0.5f, 0.0f, 1.0f, 1.0f,
         1.0f, 0.5f, 0.0f, 1.0f, 0.0f};
 
-    vector<glm::vec3> vegetation;
-    vegetation.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
-    vegetation.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
-    vegetation.push_back(glm::vec3(0.0f, 0.0f, 0.7f));
-    vegetation.push_back(glm::vec3(-0.3f, 0.0f, -2.3f));
-    vegetation.push_back(glm::vec3(0.5f, 0.0f, -0.6f));
+    vector<glm::vec3> windows{
+        glm::vec3(-1.5f, 0.0f, -0.48f),
+        glm::vec3(1.5f, 0.0f, 0.51f),
+        glm::vec3(0.0f, 0.0f, 0.7f),
+        glm::vec3(-0.3f, 0.0f, -2.3f),
+        glm::vec3(0.5f, 0.0f, -0.6f)};
 
     // cube VAO
     unsigned int cubeVAO, cubeVBO;
@@ -214,7 +214,7 @@ int main()
 
     unsigned int cubeTexture = loadTexture("../assets/marble.jpg");
     unsigned int floorTexture = loadTexture("../assets/metal.png");
-    unsigned int transparentTexture = loadTexture("../assets/grass.png");
+    unsigned int transparentTexture = loadTexture("../assets/blending_transparent_window.png");
 
     controller.showControllers();
 
@@ -226,6 +226,8 @@ int main()
     int width = SCREEN_WIDTH, height = SCREEN_HEIGHT;
 
     glEnable(GL_DEPTH_TEST); // enable depth testing for 3D
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // render loop
     while (!glfwWindowShouldClose(window))
@@ -252,6 +254,13 @@ int main()
         shader.setMat4("view", view);
         shader.setMat4("projection", projection);
 
+        std::map<float, glm::vec3> sorted;
+        for (unsigned int i = 0; i < windows.size(); i++)
+        {
+            float distance = glm::length(globalApplication::camera.Position - windows[i]);
+            sorted[distance] = windows[i];
+        }
+
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -268,25 +277,25 @@ int main()
             glm::vec3(-1.0f, 0.0f, -1.0f),
             glm::vec3(2.0f, 0.0f, 0.0f)};
 
+        glBindVertexArray(cubeVAO);
+        glBindTexture(GL_TEXTURE_2D, cubeTexture);
         for (int i = 0; i < 2; i++)
         {
             glm::vec3 pos = positions[i];
 
             shader.use();
-            glBindVertexArray(cubeVAO);
-            glBindTexture(GL_TEXTURE_2D, cubeTexture);
             model = glm::mat4(1.0f);
             model = glm::translate(model, pos);
             shader.setMat4("model", model);
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 
-        for (int i = 0; i < vegetation.size(); i++)
+        glBindVertexArray(transparentVAO);
+        glBindTexture(GL_TEXTURE_2D, transparentTexture);
+        for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
         {
-            glBindVertexArray(transparentTexture);
-            glBindTexture(GL_TEXTURE_2D, transparentTexture);
             model = glm::mat4(1.0f);
-            model = glm::translate(model, vegetation[i]);
+            model = glm::translate(model, it->second);
             shader.setMat4("model", model);
             glDrawArrays(GL_TRIANGLES, 0, 6);
         }
