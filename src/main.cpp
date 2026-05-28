@@ -240,51 +240,47 @@ int main()
         glBindTexture(GL_TEXTURE_2D, floorTexture);
         shader.setMat4("model", glm::mat4(1.0f));
         glDrawArrays(GL_TRIANGLES, 0, 6);
-        
-        // CUBE 1
-        // DRAW NORMAL CUBE 1
-        glStencilFunc(GL_ALWAYS, 1, 0xFF);
-        glStencilMask(0xFF);
-        shader.use();
-        glBindVertexArray(cubeVAO);
-        glBindTexture(GL_TEXTURE_2D, cubeTexture);
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-        shader.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
 
-        // CUBE 2
-        // DRAW NORMAL CUBE 2
-        shader.use();
-        model = glm::mat4(1.0f);
-        model = glm::translate(model,glm::vec3(2.0f, 0.0f, 0.0f));
-        shader.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        
-        // DRAW OUTLINE 1
-        glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-        glStencilMask(0x00);
-        glDisable(GL_DEPTH_TEST);
-        shaderSingleColor.use();
-        model = glm::mat4(1.0f);
-        model = glm::translate(model,glm::vec3(-1.0f, 0.0f, -1.0f));
-        model = glm::scale(model,glm::vec3(1.025f));
-        shaderSingleColor.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glm::vec3 positions[2] = {
+        glm::vec3(-1.0f, 0.0f, -1.0f),
+        glm::vec3( 2.0f, 0.0f,  0.0f)
+    };
 
-        // DRAW OUTLINE 2
-        shaderSingleColor.use();
-        model = glm::mat4(1.0f);
-        model = glm::translate(model,glm::vec3(2.0f, 0.0f, 0.0f));
-        model = glm::scale(model,glm::vec3(1.025f));
-        shaderSingleColor.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
 
-        // RESET STATE
+        for (int i = 0; i < 2; i++)
+        {
+            glm::vec3 pos = positions[i];
+            // disable stencil
+            glStencilFunc(GL_ALWAYS, 1, 0xFF);
+            glStencilMask(0xFF);
+
+            // DRAW NORMAL CUBE 1
+
+            shader.use();
+            glBindVertexArray(cubeVAO);
+            glBindTexture(GL_TEXTURE_2D, cubeTexture);
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, pos);
+            shader.setMat4("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+
+            glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+            glStencilMask(0x00);
+            glDisable(GL_DEPTH_TEST);
+            
+            shaderSingleColor.use();
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, pos);
+            model = glm::scale(model, glm::vec3(1.025f));
+            shaderSingleColor.setMat4("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+
+            glStencilFunc(GL_ALWAYS, 1, 0xFF);
+            glStencilMask(0xFF);
+            glEnable(GL_DEPTH_TEST);
+        }
+
         glBindVertexArray(0);
-        glStencilMask(0xFF);
-        glStencilFunc(GL_ALWAYS, 0, 0xFF);
-        glEnable(GL_DEPTH_TEST);
 
         // Rendering
         // (Your code clears your framebuffer, renders your other stuff etc.)
