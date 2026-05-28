@@ -6,11 +6,18 @@
 #include <imgui.h>
 #include "global.h"
 
-void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
+void inputHandler::setupMouse(GLFWwindow *window) {
+    glfwSetScrollCallback(window, scroll_callback);
+
+    glfwSetCursorPosCallback(window, mouse_callback);
+
+}
+
+void inputHandler::scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
     globalApplication::camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
 
-void mouse_callback(GLFWwindow *window, double xposIn, double yposIn) {
+void inputHandler::mouse_callback(GLFWwindow *window, double xposIn, double yposIn) {
     if (globalApplication::input.imguitoggle)
         return;
 
@@ -39,7 +46,7 @@ void inputHandler::processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    int tabState = glfwGetKey(window, GLFW_KEY_TAB);
+    int tabState = glfwGetKey(window, GLFW_KEY_R);
 
     if (tabState == GLFW_PRESS && !globalApplication::input.tabwasPressed) {
         globalApplication::input.tabwasPressed = true;

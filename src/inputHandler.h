@@ -5,10 +5,8 @@
 #ifndef MYPROJECT_INPUT_HANDLER_H
 #define MYPROJECT_INPUT_HANDLER_H
 
-void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
-void mouse_callback(GLFWwindow *window, double xposIn, double yposIn);
-
-class inputHandler {
+class inputHandler
+{
 public:
     bool imguitoggle = false;
     bool tabwasPressed = false;
@@ -21,9 +19,13 @@ public:
     float deltaTime = 0.0f; // time between current frame and last frame
     float lastFrame = 0.0f;
 
-
     static void processInput(GLFWwindow *window);
+    void setupMouse(GLFWwindow *window);
+
+private:
+
+    static void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
+    static void mouse_callback(GLFWwindow *window, double xposIn, double yposIn);
 };
 
-
-#endif //MYPROJECT_INPUT_HANDLER_H
+#endif // MYPROJECT_INPUT_HANDLER_H
