@@ -22,8 +22,6 @@
 int SCREEN_HEIGHT = 600;
 int SCREEN_WIDTH = 800;
 
-Controller controller;
-
 unsigned int loadTexture(char const *path)
 {
     unsigned int textureID;
@@ -68,8 +66,8 @@ int main()
         logger(ERROR, "windowSystem::Failed to initialize GLFW");
         return -1; // or stop engine
     }
-    GLFWwindow *window = windowSystem::makeWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "OpenGL Window");
-    if (!window)
+    globalApplication::window = windowSystem::makeWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "OpenGL Window");
+    if (!globalApplication::window)
     {
         logger(ERROR, "windowSystem::Failed to create GLFW window");
         windowSystem::glfw_shutdown();
@@ -79,10 +77,10 @@ int main()
     // disable vsync for uncapped framerate
     glfwSwapInterval(0);
 
-    globalApplication::input.setupMouse(window);
+    globalApplication::input.setupMouse(globalApplication::window);
 
     // tell GLFW to capture our mouse
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(globalApplication::window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // initialize GLAD before we can use any opengl functions
     // cast's the glfw function which gives the OS specific function for GLAD to find
@@ -93,10 +91,10 @@ int main()
         return -1;
     }
 
-    glfwGetFramebufferSize(window, &SCREEN_WIDTH, &SCREEN_HEIGHT);
+    glfwGetFramebufferSize(globalApplication::window, &SCREEN_WIDTH, &SCREEN_HEIGHT);
     glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-    if (!imguiLayer::imguiSetup(window))
+    if (!imguiLayer::imguiSetup(globalApplication::window))
     {
         logger(ERROR, "Failed to initialize ImGui");
         return -1;
@@ -225,7 +223,7 @@ int main()
     unsigned int floorTexture = loadTexture("../assets/metal.png");
     unsigned int transparentTexture = loadTexture("../assets/blending_transparent_window.png");
 
-    controller.showControllers();
+    globalApplication::controller.showControllers();
 
     float lastFrame = 0.0f;
 
@@ -238,26 +236,32 @@ int main()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    bool control = globalApplication::controller.isConnected();
+
+    logger(INFO, control);
+
     // render loop
-    while (!glfwWindowShouldClose(window))
+    while (!glfwWindowShouldClose(globalApplication::window))
     {
         glfwPollEvents(); // processes events received in window and returns a response(if requested)
         // input function called each frame
-        inputHandler::processInput(window);
+        inputHandler::processInput(globalApplication::window);
 
         float currentFrame = static_cast<float>(glfwGetTime());
         globalApplication::input.deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        glfwGetFramebufferSize(window, &width, &height);
+        glfwGetFramebufferSize(globalApplication::window, &width, &height);
         SCREEN_WIDTH = (float)width;
         SCREEN_HEIGHT = (float)height;
 
-        controller.update();
+        globalApplication::controller.update();
+        globalApplication::controller.processController();
+
 
         glm::mat4 model = glm::mat4(1.0f);
         glm::mat4 view = globalApplication::camera.GetViewMatrix();
-        glm::mat4 projection = glm::perspective(glm::radians(globalApplication::camera.Zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(globalApplication::camera.Zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.001f, 100.0f);
 
         shader.use();
         shader.setMat4("view", view);
@@ -322,7 +326,7 @@ int main()
         // ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         // (Your code calls glfwSwapBuffers() etc.)
 
-        glfwSwapBuffers(window); // swaps color buffer in window
+        glfwSwapBuffers(globalApplication::window); // swaps color buffer in window
     }
 
     imguiLayer::Shutdown();

@@ -1,4 +1,5 @@
 #pragma once
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
 struct Vec2
@@ -30,8 +31,14 @@ public:
     Vec2 leftStick() const;
     Vec2 rightStick() const;
 
+    Vec2 processJoystickInput(Vec2 Joycon);
+    void processController();
+
     float leftTrigger() const;
     float rightTrigger() const;
+
+    float speed = 1000.0;
+    float deadzone = 0.2;
 
 private:
     int jid;

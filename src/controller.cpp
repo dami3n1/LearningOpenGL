@@ -1,5 +1,6 @@
 #include "controller.h"
 #include "logger.h"
+#include "global.h"
 
 Controller::Controller(int joystickID)
 {
@@ -36,7 +37,6 @@ void Controller::showControllers()
     }
 }
 
-
 bool Controller::isConnected() const
 {
     return glfwJoystickPresent(jid);
@@ -72,13 +72,69 @@ bool Controller::Start() const { return button(7); }
 
 Vec2 Controller::leftStick() const
 {
-    return { axis(0), axis(1) };
+    return {axis(0), axis(1)};
 }
 
 Vec2 Controller::rightStick() const
 {
-    return { axis(2), axis(3) };
+    return {axis(3), axis(4)};
 }
 
-float Controller::leftTrigger() const { return axis(4); }
+Vec2 Controller::processJoystickInput(Vec2 Joystick)
+{
+    Vec2 JoystickOut{0.0f, 0.0f};
+
+    if (fabs(Joystick.x) >= globalApplication::controller.deadzone)
+        JoystickOut.x = Joystick.x * globalApplication::controller.speed * globalApplication::input.deltaTime;
+
+    if (fabs(Joystick.y) >= globalApplication::controller.deadzone)
+        JoystickOut.y = (-Joystick.y) * globalApplication::controller.speed * globalApplication::input.deltaTime;
+
+    return JoystickOut;
+}
+
+void Controller::processController()
+{
+    // movement control
+    Vec2 leftJoystick = globalApplication::controller.processJoystickInput(globalApplication::controller.leftStick());
+
+    globalApplication::camera.ProcessKeyboard(CONTROLLER, globalApplication::input.deltaTime, leftJoystick.x, leftJoystick.y);
+
+    // camera control
+    Vec2 rightJoystick = globalApplication::controller.processJoystickInput(globalApplication::controller.rightStick());
+
+    globalApplication::camera.ProcessMouseMovement(rightJoystick.x, rightJoystick.y);
+
+    if (globalApplication::controller.A())
+        globalApplication::camera.ProcessKeyboard(UP, globalApplication::input.deltaTime, 0, 0);
+    if (globalApplication::controller.B())
+        globalApplication::camera.ProcessKeyboard(DOWN, globalApplication::input.deltaTime, 0, 0);
+    if (globalApplication::controller.Y())
+        glfwSetWindowShouldClose(globalApplication::window, true);
+
+    if (rightTrigger() >= 0.1f)
+    {
+        if (globalApplication::camera.Zoom < 1.0f)
+        {
+            globalApplication::camera.Zoom = 1.0f;
+        }
+        else
+        {
+            globalApplication::camera.Zoom -= 0.3;
+        }
+    }
+    if (leftTrigger() >= 0.1f)
+    {
+        if (globalApplication::camera.Zoom > 180.0f)
+        {
+            globalApplication::camera.Zoom = 160.0f;
+        }
+        else
+        {
+            globalApplication::camera.Zoom += 0.3;
+        }
+    }
+}
+
+float Controller::leftTrigger() const { return axis(2); }
 float Controller::rightTrigger() const { return axis(5); }
