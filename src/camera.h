@@ -4,6 +4,7 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <algorithm>
 
 // Defines several possible options for camera movement. Used as abstraction to stay away from window-system specific input methods
 enum Camera_Movement {
@@ -104,10 +105,7 @@ public:
 
         // make sure that when pitch is out of bounds, screen doesn't get flipped
         if (constrainPitch) {
-            if (Pitch > 89.0f)
-                Pitch = 89.0f;
-            if (Pitch < -89.0f)
-                Pitch = -89.0f;
+            Pitch = std::clamp(Pitch, -89.0f, 89.0f);
         }
 
         // update Front, Right and Up Vectors using the updated Euler angles
@@ -117,10 +115,7 @@ public:
     // processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
     void ProcessMouseScroll(float yoffset) {
         Zoom -= (float) yoffset;
-        if (Zoom < 1.0f)
-            Zoom = 1.0f;
-        if (Zoom > 180.0f)
-            Zoom = 160.0f;
+        Zoom = std::clamp(Zoom, 1.0f, 170.0f);
     }
 
 private:

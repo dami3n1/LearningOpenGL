@@ -1,6 +1,7 @@
 #include "controller.h"
 #include "logger.h"
 #include "global.h"
+#include <algorithm>
 
 Controller::Controller(int joystickID)
 {
@@ -85,10 +86,10 @@ Vec2 Controller::processJoystickInput(Vec2 Joystick)
     Vec2 JoystickOut{0.0f, 0.0f};
 
     if (fabs(Joystick.x) >= globalApplication::controller.deadzone)
-        JoystickOut.x = Joystick.x * globalApplication::controller.speed * globalApplication::input.deltaTime;
+        JoystickOut.x = Joystick.x * globalApplication::controller.controlCamSpeed * globalApplication::input.deltaTime;
 
     if (fabs(Joystick.y) >= globalApplication::controller.deadzone)
-        JoystickOut.y = (-Joystick.y) * globalApplication::controller.speed * globalApplication::input.deltaTime;
+       JoystickOut.y = (-Joystick.y) * globalApplication::controller.controlCamSpeed * globalApplication::input.deltaTime;
 
     return JoystickOut;
 }
@@ -98,7 +99,7 @@ void Controller::processController()
     // movement control
     Vec2 leftJoystick = globalApplication::controller.processJoystickInput(globalApplication::controller.leftStick());
 
-    globalApplication::camera.ProcessKeyboard(CONTROLLER, globalApplication::input.deltaTime, leftJoystick.x, leftJoystick.y);
+    globalApplication::camera.ProcessKeyboard(CONTROLLER, globalApplication::input.deltaTime * globalApplication::controller.controlMovSpeed, leftJoystick.x, leftJoystick.y);
 
     // camera control
     Vec2 rightJoystick = globalApplication::controller.processJoystickInput(globalApplication::controller.rightStick());
@@ -112,27 +113,15 @@ void Controller::processController()
     if (globalApplication::controller.Y())
         glfwSetWindowShouldClose(globalApplication::window, true);
 
+    globalApplication::camera.Zoom = std::clamp(globalApplication::camera.Zoom, 1.0f, 170.0f);
+
     if (rightTrigger() >= 0.1f)
     {
-        if (globalApplication::camera.Zoom < 1.0f)
-        {
-            globalApplication::camera.Zoom = 1.0f;
-        }
-        else
-        {
-            globalApplication::camera.Zoom -= 0.3;
-        }
+        globalApplication::camera.Zoom -= 0.3;
     }
     if (leftTrigger() >= 0.1f)
     {
-        if (globalApplication::camera.Zoom > 180.0f)
-        {
-            globalApplication::camera.Zoom = 160.0f;
-        }
-        else
-        {
-            globalApplication::camera.Zoom += 0.3;
-        }
+        globalApplication::camera.Zoom += 0.3;
     }
 }
 

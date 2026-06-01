@@ -243,6 +243,9 @@ int main()
     // render loop
     while (!glfwWindowShouldClose(globalApplication::window))
     {
+        if (globalApplication::controller.X()){
+            shader.reload();
+        }
         glfwPollEvents(); // processes events received in window and returns a response(if requested)
         // input function called each frame
         inputHandler::processInput(globalApplication::window);
