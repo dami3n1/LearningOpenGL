@@ -38,6 +38,12 @@ FetchContent_Declare(
     GIT_TAG v6.0.5
 )
 
+FetchContent_Declare(
+    glm
+    GIT_REPOSITORY https://github.com/g-truc/glm.git
+    GIT_TAG 1.0.3
+)
+
 # --------------------------------------------------
 # Assimp configuration
 # --------------------------------------------------
@@ -60,6 +66,7 @@ set(ASSIMP_BUILD_GLTF_IMPORTER ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(glfw)
 FetchContent_MakeAvailable(imgui)
 FetchContent_MakeAvailable(assimp)
+FetchContent_MakeAvailable(glm)
 
 # Optional Assimp optimization
 if(TARGET assimp)
@@ -71,12 +78,6 @@ endif()
 # --------------------------------------------------
 
 find_package(OpenGL REQUIRED)
-
-# --------------------------------------------------
-# GLM
-# --------------------------------------------------
-
-add_subdirectory(ext/glm-1.0.3)
 
 # --------------------------------------------------
 # GLAD
