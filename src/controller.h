@@ -37,7 +37,7 @@ public:
     float leftTrigger() const;
     float rightTrigger() const;
 
-    float controlMovSpeed = 25.0f;
+    float controlMovSpeed = 1.0f;
     float controlCamSpeed = 1000.0f;
     float deadzone = 0.2f;
 

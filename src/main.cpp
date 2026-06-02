@@ -75,7 +75,7 @@ int main()
     }
 
     // disable vsync for uncapped framerate
-    glfwSwapInterval(0);
+    //glfwSwapInterval(0);
 
     globalApplication::input.setupMouse(globalApplication::window);
 
