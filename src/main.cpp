@@ -75,7 +75,7 @@ int main()
     }
 
     // disable vsync for uncapped framerate
-    //glfwSwapInterval(0);
+    // glfwSwapInterval(0);
 
     globalApplication::input.setupMouse(globalApplication::window);
 
@@ -100,7 +100,10 @@ int main()
         return -1;
     }
 
+    glEnable(GL_DEPTH_TEST); // enable depth testing for 3D
+
     Shader shader("../shaders/shader.vert", "../shaders/shader.frag");
+    Shader framebuffershader("../shaders/sampleshader.vert", "../shaders/sampleshader.frag");
 
     /*
     Remember: to specify vertices in a counter-clockwise winding order you need to visualize the triangle
@@ -175,13 +178,22 @@ int main()
         1.0f, -0.5f, 0.0f, 1.0f, 1.0f,
         1.0f, 0.5f, 0.0f, 1.0f, 0.0f};
 
+    float quadVertices[] = {
+        // positions   // texCoords
+        -1.0f, 1.0f, 0.0f, 1.0f,
+        -1.0f, -1.0f, 0.0f, 0.0f,
+        1.0f, -1.0f, 1.0f, 0.0f,
+
+        -1.0f, 1.0f, 0.0f, 1.0f,
+        1.0f, -1.0f, 1.0f, 0.0f,
+        1.0f, 1.0f, 1.0f, 1.0f};
+
     vector<glm::vec3> windows{
         glm::vec3(-1.5f, 0.0f, -0.48f),
         glm::vec3(1.5f, 0.0f, 0.51f),
         glm::vec3(0.0f, 0.0f, 0.7f),
         glm::vec3(-0.3f, 0.0f, -2.3f),
         glm::vec3(0.5f, 0.0f, -0.6f)};
-
     // cube VAO
     unsigned int cubeVAO, cubeVBO;
     glGenVertexArrays(1, &cubeVAO);
@@ -218,8 +230,20 @@ int main()
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
     glBindVertexArray(0);
+    //quad VAO
+    unsigned int quadVAO, quadVBO;
+    glGenVertexArrays(1, &quadVAO);
+    glGenBuffers(1, &quadVBO);
+    glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)(2 * sizeof(float)));
+    glBindVertexArray(0);
 
-    unsigned int cubeTexture = loadTexture("../assets/marble.jpg");
+    unsigned int cubeTexture = loadTexture("../assets/container.jpg");
     unsigned int floorTexture = loadTexture("../assets/metal.png");
     unsigned int transparentTexture = loadTexture("../assets/blending_transparent_window.png");
 
@@ -236,14 +260,64 @@ int main()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    bool control = globalApplication::controller.isConnected();
+    shader.use();
+    shader.setInt("texture1", 0);
 
-    logger(INFO, control);
+    framebuffershader.use();
+    framebuffershader.setInt("screenTexture", 0);
+
+
+
+    // create framebuffer and bind it
+    unsigned int framebuffer;
+    glGenFramebuffers(1, &framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+    // create a texture image and attach color attachment to framebuffer
+    // generate texture
+    unsigned int textureColorbuffer;
+    glGenTextures(1, &textureColorbuffer);
+    glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    // attach it to currently bound framebuffer object
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
+
+    // create a renderbuffer object for depth and stencil attachment (we won't be sampling these)
+    unsigned int rbo;
+    glGenRenderbuffers(1, &rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+    // precision of 24 bits for depth and 8 bits for stencil
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCREEN_WIDTH, SCREEN_HEIGHT);
+    // unbind renderbuffer object after we set its storage so that we won't accidentally mess with it
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+    // attach the renderbuffer object to the framebuffer's depth and stencil attachment
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+
+    // check if framebuffer is complete
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        logger(ERROR, "ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
+
+    // unbind framebuffer so that we can render to default framebuffer again
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // Now we draw to our framebuffer object then swap to main buffer to display what was on our object
+    // This allows us to do post processing effects and other cool things by sampling the texture we attached
+    // to our framebuffer object and applying effects to it before we draw it to the main framebuffer
+
+
+    //draw as wireframe
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     // render loop
     while (!glfwWindowShouldClose(globalApplication::window))
     {
-        if (globalApplication::controller.X()){
+        if (globalApplication::controller.X())
+        {
             shader.reload();
         }
         glfwPollEvents(); // processes events received in window and returns a response(if requested)
@@ -261,7 +335,6 @@ int main()
         globalApplication::controller.update();
         globalApplication::controller.processController();
 
-
         glm::mat4 model = glm::mat4(1.0f);
         glm::mat4 view = globalApplication::camera.GetViewMatrix();
         glm::mat4 projection = glm::perspective(glm::radians(globalApplication::camera.Zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.001f, 100.0f);
@@ -277,10 +350,14 @@ int main()
             sorted[distance] = windows[i];
         }
 
+        framebuffershader.use();
+        //first pass
+        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        glEnable(GL_CULL_FACE); 
+        glEnable(GL_DEPTH_TEST); // enable depth testing for 3D
+        glEnable(GL_CULL_FACE);
 
         // STENCIL SETUP
 
@@ -300,7 +377,7 @@ int main()
             shader.setMat4("model", model);
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
-        
+
         glDisable(GL_CULL_FACE);
 
         // DRAW FLOOR (NO STENCIL WRITES)
@@ -322,6 +399,17 @@ int main()
         }
 
         glBindVertexArray(0);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        framebuffershader.use();
+        glBindVertexArray(quadVAO);
+        glDisable(GL_DEPTH_TEST);
+        glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
 
         // Rendering
         // (Your code clears your framebuffer, renders your other stuff etc.)
