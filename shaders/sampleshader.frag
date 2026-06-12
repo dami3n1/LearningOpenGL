@@ -24,8 +24,8 @@ void main() {
     vec3 sampleTex[9];
     for(int i = 0; i < 9; i++) {
         sampleTex[i] = vec3(texture(screenTexture, TexCoords.st + offsets[i]));
-        //float average = 0.2126 * sampleTex[i].r + 0.7152 * sampleTex[i].g + 0.0722 * sampleTex[i].b;
-        //sampleTex[i] = vec3(average, average, average);
+        float average = 0.2126 * sampleTex[i].r + 0.7152 * sampleTex[i].g + 0.0722 * sampleTex[i].b;
+        sampleTex[i] = vec3(average, average, average);
     }
     vec3 col = vec3(0.0);
     for(int i = 0; i < 9; i++) {
