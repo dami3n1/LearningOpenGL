@@ -179,14 +179,15 @@ int main()
         1.0f, 0.5f, 0.0f, 1.0f, 0.0f};
 
     float quadVertices[] = {
+        // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates. NOTE that this plane is now much smaller and at the top of the screen
         // positions   // texCoords
-        -1.0f, 1.0f, 0.0f, 1.0f,
-        -1.0f, -1.0f, 0.0f, 0.0f,
-        1.0f, -1.0f, 1.0f, 0.0f,
+        -0.3f, 1.0f, 0.0f, 1.0f,
+        -0.3f, 0.7f, 0.0f, 0.0f,
+        0.3f, 0.7f, 1.0f, 0.0f,
 
-        -1.0f, 1.0f, 0.0f, 1.0f,
-        1.0f, -1.0f, 1.0f, 0.0f,
-        1.0f, 1.0f, 1.0f, 1.0f};
+        -0.3f, 1.0f, 0.0f, 1.0f,
+        0.3f, 0.7f, 1.0f, 0.0f,
+        0.3f, 1.0f, 1.0f, 1.0f};
 
     vector<glm::vec3> windows{
         glm::vec3(-1.5f, 0.0f, -0.48f),
@@ -230,7 +231,7 @@ int main()
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
     glBindVertexArray(0);
-    //quad VAO
+    // quad VAO
     unsigned int quadVAO, quadVBO;
     glGenVertexArrays(1, &quadVAO);
     glGenBuffers(1, &quadVBO);
@@ -265,8 +266,6 @@ int main()
 
     framebuffershader.use();
     framebuffershader.setInt("screenTexture", 0);
-
-
 
     // create framebuffer and bind it
     unsigned int framebuffer;
@@ -309,9 +308,8 @@ int main()
     // This allows us to do post processing effects and other cool things by sampling the texture we attached
     // to our framebuffer object and applying effects to it before we draw it to the main framebuffer
 
-
-    //draw as wireframe
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    // draw as wireframe
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     // render loop
     while (!glfwWindowShouldClose(globalApplication::window))
@@ -336,7 +334,11 @@ int main()
         globalApplication::controller.processController();
 
         glm::mat4 model = glm::mat4(1.0f);
+        globalApplication::camera.Yaw += 180.0f;
+        globalApplication::camera.ProcessMouseMovement(0, 0, false);
         glm::mat4 view = globalApplication::camera.GetViewMatrix();
+        globalApplication::camera.Yaw -= 180.0f;
+        globalApplication::camera.ProcessMouseMovement(0, 0, true);
         glm::mat4 projection = glm::perspective(glm::radians(globalApplication::camera.Zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.001f, 100.0f);
 
         shader.use();
@@ -351,12 +353,13 @@ int main()
         }
 
         framebuffershader.use();
-        //first pass
+        // first pass
         glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+        glEnable(GL_DEPTH_TEST); // enable depth testing for 3D
 
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glEnable(GL_DEPTH_TEST); // enable depth testing for 3D
+        // glEnable(GL_DEPTH_TEST); // enable depth testing for 3D
         glEnable(GL_CULL_FACE);
 
         // STENCIL SETUP
@@ -400,14 +403,57 @@ int main()
 
         glBindVertexArray(0);
 
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0); // bind to default framebuffer again and draw a quad plane with the attached framebuffer color texture
+
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST); // enable depth testing for 3D
+        glEnable(GL_CULL_FACE);
+
+        model  = glm::mat4(1.0f);
+        view = globalApplication::camera.GetViewMatrix();
+        shader.setMat4("view", view);
+
+        // STENCIL SETUP
+
+
+        glBindVertexArray(cubeVAO);
+        glBindTexture(GL_TEXTURE_2D, cubeTexture);
+        for (int i = 0; i < 2; i++)
+        {
+            glm::vec3 pos = positions[i];
+
+            shader.use();
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, pos);
+            shader.setMat4("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
+
+        glDisable(GL_CULL_FACE);
+
+        // DRAW FLOOR (NO STENCIL WRITES)
+        shader.use();
+        glBindVertexArray(planeVAO);
+        glBindTexture(GL_TEXTURE_2D, floorTexture);
+        shader.setMat4("model", glm::mat4(1.0f));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        glBindVertexArray(transparentVAO);
+        glBindTexture(GL_TEXTURE_2D, transparentTexture);
+        // reverse iterator so we draw the ones behind first before the ones in front
+        for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
+        {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, it->second);
+            shader.setMat4("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+
         glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
-        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
 
         framebuffershader.use();
         glBindVertexArray(quadVAO);
-        glDisable(GL_DEPTH_TEST);
         glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
