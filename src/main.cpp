@@ -59,6 +59,37 @@ unsigned int loadTexture(char const *path)
     return textureID;
 }
 
+unsigned int loadCubemap(vector<std::string> faces)
+{
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+    int width, height, nrChannels;
+    for (unsigned int i = 0; i < faces.size(); i++)
+    {
+        unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+        if (data)
+        {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            stbi_image_free(data);
+        }
+        else
+        {
+            logger(ERROR, "Cubemap texture failed to load at path: " + faces[i]);
+            stbi_image_free(data);
+        }
+    }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    return textureID;
+}
+
 int main()
 {
     if (!windowSystem::glfw_init())
@@ -104,6 +135,7 @@ int main()
 
     Shader shader("../shaders/shader.vert", "../shaders/shader.frag");
     Shader framebuffershader("../shaders/sampleshader.vert", "../shaders/sampleshader.frag");
+    Shader skyboxShader("../shaders/skybox.vert", "../shaders/skybox.frag");
 
     /*
     Remember: to specify vertices in a counter-clockwise winding order you need to visualize the triangle
@@ -189,6 +221,50 @@ int main()
         0.3f, 0.7f, 1.0f, 0.0f,
         0.3f, 1.0f, 1.0f, 1.0f};
 
+    float skyboxVertices[] = {
+        // positions
+        -1.0f, 1.0f, -1.0f,
+        -1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+        1.0f, 1.0f, -1.0f,
+        -1.0f, 1.0f, -1.0f,
+
+        -1.0f, -1.0f, 1.0f,
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, 1.0f, -1.0f,
+        -1.0f, 1.0f, -1.0f,
+        -1.0f, 1.0f, 1.0f,
+        -1.0f, -1.0f, 1.0f,
+
+        1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+
+        -1.0f, -1.0f, 1.0f,
+        -1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, -1.0f, 1.0f,
+        -1.0f, -1.0f, 1.0f,
+
+        -1.0f, 1.0f, -1.0f,
+        1.0f, 1.0f, -1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        -1.0f, 1.0f, 1.0f,
+        -1.0f, 1.0f, -1.0f,
+
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f, 1.0f,
+        1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f, 1.0f,
+        1.0f, -1.0f, 1.0f};
+
     vector<glm::vec3> windows{
         glm::vec3(-1.5f, 0.0f, -0.48f),
         glm::vec3(1.5f, 0.0f, 0.51f),
@@ -243,10 +319,29 @@ int main()
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)(2 * sizeof(float)));
     glBindVertexArray(0);
+    // skybox VAO
+    unsigned int skyboxVAO, skyboxVBO;
+    glGenVertexArrays(1, &skyboxVAO);
+    glGenBuffers(1, &skyboxVBO);
+    glBindVertexArray(skyboxVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+    glBindVertexArray(0);
 
     unsigned int cubeTexture = loadTexture("../assets/container.jpg");
     unsigned int floorTexture = loadTexture("../assets/metal.png");
     unsigned int transparentTexture = loadTexture("../assets/blending_transparent_window.png");
+
+    vector<std::string> faces{
+        "../assets/skybox/right.jpg",
+        "../assets/skybox/left.jpg",
+        "../assets/skybox/top.jpg",
+        "../assets/skybox/bottom.jpg",
+        "../assets/skybox/front.jpg",
+        "../assets/skybox/back.jpg"};
+    unsigned int cubemapTexture = loadCubemap(faces);
 
     globalApplication::controller.showControllers();
 
@@ -333,18 +428,6 @@ int main()
         globalApplication::controller.update();
         globalApplication::controller.processController();
 
-        glm::mat4 model = glm::mat4(1.0f);
-        globalApplication::camera.Yaw += 180.0f;
-        globalApplication::camera.ProcessMouseMovement(0, 0, false);
-        glm::mat4 view = globalApplication::camera.GetViewMatrix();
-        globalApplication::camera.Yaw -= 180.0f;
-        globalApplication::camera.ProcessMouseMovement(0, 0, true);
-        glm::mat4 projection = glm::perspective(glm::radians(globalApplication::camera.Zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.001f, 100.0f);
-
-        shader.use();
-        shader.setMat4("view", view);
-        shader.setMat4("projection", projection);
-
         std::map<float, glm::vec3> sorted;
         for (unsigned int i = 0; i < windows.size(); i++)
         {
@@ -352,8 +435,11 @@ int main()
             sorted[distance] = windows[i];
         }
 
-        framebuffershader.use();
-        // first pass
+        // first render pass: mirror texture.
+        // bind to framebuffer and draw to color texture as we normally
+        // would, but with the view camera reversed.
+        // bind to framebuffer and draw scene as we normally would to color texture
+        // ------------------------------------------------------------------------
         glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
         glEnable(GL_DEPTH_TEST); // enable depth testing for 3D
 
@@ -362,33 +448,51 @@ int main()
         // glEnable(GL_DEPTH_TEST); // enable depth testing for 3D
         glEnable(GL_CULL_FACE);
 
-        // STENCIL SETUP
+        shader.use();
+
+        glm::mat4 model = glm::mat4(1.0f);
+
+        // normal projection stays the same
+        glm::mat4 projection = glm::perspective(
+            glm::radians(globalApplication::camera.Zoom),
+            (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT,
+            0.1f,
+            100.0f);
+
+        glm::mat4 view = glm::lookAt(
+            globalApplication::camera.Position,
+            globalApplication::camera.Position - globalApplication::camera.Front,
+            globalApplication::camera.Up);
+
+        shader.setMat4("view", view);
+        shader.setMat4("projection", projection);
 
         glm::vec3 positions[2] = {
             glm::vec3(-1.0f, 0.0f, -1.0f),
             glm::vec3(2.0f, 0.0f, 0.0f)};
 
         glBindVertexArray(cubeVAO);
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, cubeTexture);
         for (int i = 0; i < 2; i++)
         {
             glm::vec3 pos = positions[i];
 
-            shader.use();
             model = glm::mat4(1.0f);
             model = glm::translate(model, pos);
             shader.setMat4("model", model);
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
+        glBindVertexArray(0);
 
         glDisable(GL_CULL_FACE);
 
-        // DRAW FLOOR (NO STENCIL WRITES)
-        shader.use();
+        // DRAW FLOOR
         glBindVertexArray(planeVAO);
         glBindTexture(GL_TEXTURE_2D, floorTexture);
         shader.setMat4("model", glm::mat4(1.0f));
         glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
 
         glBindVertexArray(transparentVAO);
         glBindTexture(GL_TEXTURE_2D, transparentTexture);
@@ -400,9 +504,24 @@ int main()
             shader.setMat4("model", model);
             glDrawArrays(GL_TRIANGLES, 0, 6);
         }
-
         glBindVertexArray(0);
 
+        // skybox setup to draw last
+        glDepthFunc(GL_LEQUAL); // set depth function to less than (default)
+        skyboxShader.use();
+        glm::mat4 skyboxView = glm::mat4(glm::mat3(view));
+        skyboxShader.setMat4("view", skyboxView);
+        skyboxShader.setMat4("projection", projection);
+        // skybox cube
+        glBindVertexArray(skyboxVAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+        glDepthFunc(GL_LESS); // set depth function back to default
+
+        // second render pass: draw as normal
+        // ----------------------------------
         glBindFramebuffer(GL_FRAMEBUFFER, 0); // bind to default framebuffer again and draw a quad plane with the attached framebuffer color texture
 
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -410,34 +529,33 @@ int main()
         glEnable(GL_DEPTH_TEST); // enable depth testing for 3D
         glEnable(GL_CULL_FACE);
 
-        model  = glm::mat4(1.0f);
+        shader.use();
+        model = glm::mat4(1.0f);
         view = globalApplication::camera.GetViewMatrix();
         shader.setMat4("view", view);
 
-        // STENCIL SETUP
-
-
         glBindVertexArray(cubeVAO);
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, cubeTexture);
         for (int i = 0; i < 2; i++)
         {
             glm::vec3 pos = positions[i];
 
-            shader.use();
             model = glm::mat4(1.0f);
             model = glm::translate(model, pos);
             shader.setMat4("model", model);
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
+        glBindVertexArray(0);
 
         glDisable(GL_CULL_FACE);
 
-        // DRAW FLOOR (NO STENCIL WRITES)
-        shader.use();
+        // DRAW FLOOR
         glBindVertexArray(planeVAO);
         glBindTexture(GL_TEXTURE_2D, floorTexture);
         shader.setMat4("model", glm::mat4(1.0f));
         glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
 
         glBindVertexArray(transparentVAO);
         glBindTexture(GL_TEXTURE_2D, transparentTexture);
@@ -449,9 +567,25 @@ int main()
             shader.setMat4("model", model);
             glDrawArrays(GL_TRIANGLES, 0, 6);
         }
+        glBindVertexArray(0);
 
+        // skybox setup to draw last
+        glDepthFunc(GL_LEQUAL); // set depth function to less than (default)
+        skyboxShader.use();
+        view = glm::mat4(glm::mat3(globalApplication::camera.GetViewMatrix())); // remove translation from the view matrix
+        skyboxShader.setMat4("view", view);
+        skyboxShader.setMat4("projection", projection);
+        // skybox cube
+        glBindVertexArray(skyboxVAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+        glDepthFunc(GL_LESS); // set depth function back to default
+
+        // now draw the mirror quad with screen texture
+        // --------------------------------------------
         glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
-
         framebuffershader.use();
         glBindVertexArray(quadVAO);
         glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
