@@ -133,9 +133,9 @@ int main()
 
     glEnable(GL_DEPTH_TEST); // enable depth testing for 3D
 
-    Shader shader("../shaders/shader.vert", "../shaders/shader.frag");
-    Shader framebuffershader("../shaders/sampleshader.vert", "../shaders/sampleshader.frag");
-    Shader skyboxShader("../shaders/skybox.vert", "../shaders/skybox.frag");
+    Shader shader("../shaders/defaultShader.vert", "../shaders/defaultShader.frag");
+    Shader framebuffershader("../shaders/framebufferShader.vert", "../shaders/framebufferShader.frag");
+    Shader skyboxShader("../shaders/skyboxShader.vert", "../shaders/skyboxShader.frag");
 
     /*
     Remember: to specify vertices in a counter-clockwise winding order you need to visualize the triangle
