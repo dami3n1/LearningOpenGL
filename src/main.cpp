@@ -134,6 +134,7 @@ int main()
     glEnable(GL_DEPTH_TEST); // enable depth testing for 3D
 
     Shader shader("../shaders/defaultShader.vert", "../shaders/defaultShader.frag");
+    Shader windowShader("../shaders/windowShader.vert", "../shaders/windowShader.frag");
     Shader framebuffershader("../shaders/framebufferShader.vert", "../shaders/framebufferShader.frag");
     Shader skyboxShader("../shaders/skyboxShader.vert", "../shaders/skyboxShader.frag");
 
@@ -359,6 +360,9 @@ int main()
     shader.use();
     shader.setInt("texture1", 0);
 
+    windowShader.use();
+    windowShader.setInt("windowTexture", 0);
+
     framebuffershader.use();
     framebuffershader.setInt("screenTexture", 0);
 
@@ -494,19 +498,7 @@ int main()
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
 
-        glBindVertexArray(transparentVAO);
-        glBindTexture(GL_TEXTURE_2D, transparentTexture);
-        // reverse iterator so we draw the ones behind first before the ones in front
-        for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
-        {
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, it->second);
-            shader.setMat4("model", model);
-            glDrawArrays(GL_TRIANGLES, 0, 6);
-        }
-        glBindVertexArray(0);
-
-        // skybox setup to draw last
+        // Draw the skybox before transparent objects so they blend over it.
         glDepthFunc(GL_LEQUAL); // set depth function to less than (default)
         skyboxShader.use();
         glm::mat4 skyboxView = glm::mat4(glm::mat3(view));
@@ -519,6 +511,24 @@ int main()
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
         glDepthFunc(GL_LESS); // set depth function back to default
+
+        windowShader.use();
+        windowShader.setMat4("view", view);
+        windowShader.setMat4("projection", projection);
+        glDepthMask(GL_FALSE);
+        glBindVertexArray(transparentVAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, transparentTexture);
+        // reverse iterator so we draw the ones behind first before the ones in front
+        for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
+        {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, it->second);
+            windowShader.setMat4("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        glBindVertexArray(0);
+        glDepthMask(GL_TRUE);
 
         // second render pass: draw as normal
         // ----------------------------------
@@ -557,23 +567,11 @@ int main()
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
 
-        glBindVertexArray(transparentVAO);
-        glBindTexture(GL_TEXTURE_2D, transparentTexture);
-        // reverse iterator so we draw the ones behind first before the ones in front
-        for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
-        {
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, it->second);
-            shader.setMat4("model", model);
-            glDrawArrays(GL_TRIANGLES, 0, 6);
-        }
-        glBindVertexArray(0);
-
-        // skybox setup to draw last
+        // Draw the skybox before transparent objects so they blend over it.
         glDepthFunc(GL_LEQUAL); // set depth function to less than (default)
         skyboxShader.use();
-        view = glm::mat4(glm::mat3(globalApplication::camera.GetViewMatrix())); // remove translation from the view matrix
-        skyboxShader.setMat4("view", view);
+        skyboxView = glm::mat4(glm::mat3(view)); // remove translation from the view matrix
+        skyboxShader.setMat4("view", skyboxView);
         skyboxShader.setMat4("projection", projection);
         // skybox cube
         glBindVertexArray(skyboxVAO);
@@ -582,6 +580,24 @@ int main()
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
         glDepthFunc(GL_LESS); // set depth function back to default
+
+        windowShader.use();
+        windowShader.setMat4("view", view);
+        windowShader.setMat4("projection", projection);
+        glDepthMask(GL_FALSE);
+        glBindVertexArray(transparentVAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, transparentTexture);
+        // reverse iterator so we draw the ones behind first before the ones in front
+        for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
+        {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, it->second);
+            windowShader.setMat4("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        glBindVertexArray(0);
+        glDepthMask(GL_TRUE);
 
         // now draw the mirror quad with screen texture
         // --------------------------------------------
