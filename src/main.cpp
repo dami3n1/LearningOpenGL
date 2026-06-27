@@ -214,13 +214,13 @@ int main()
     float quadVertices[] = {
         // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates. NOTE that this plane is now much smaller and at the top of the screen
         // positions   // texCoords
-        -0.3f, 1.0f, 0.0f, 1.0f,
-        -0.3f, 0.7f, 0.0f, 0.0f,
-        0.3f, 0.7f, 1.0f, 0.0f,
+        -0.15f, 1.0f, 0.0f, 1.0f,
+        -0.15f, 0.7f, 0.0f, 0.0f,
+        0.15f, 0.7f, 1.0f, 0.0f,
 
-        -0.3f, 1.0f, 0.0f, 1.0f,
-        0.3f, 0.7f, 1.0f, 0.0f,
-        0.3f, 1.0f, 1.0f, 1.0f};
+        -0.15f, 1.0f, 0.0f, 1.0f,
+        0.15f, 0.7f, 1.0f, 0.0f,
+        0.15f, 1.0f, 1.0f, 1.0f};
 
     float skyboxVertices[] = {
         // positions
@@ -352,6 +352,8 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     int width = SCREEN_WIDTH, height = SCREEN_HEIGHT;
+    int framebufferWidth = SCREEN_WIDTH;
+    int framebufferHeight = SCREEN_HEIGHT;
 
     glEnable(GL_DEPTH_TEST); // enable depth testing for 3D
     glEnable(GL_BLEND);
@@ -426,8 +428,28 @@ int main()
         lastFrame = currentFrame;
 
         glfwGetFramebufferSize(globalApplication::window, &width, &height);
-        SCREEN_WIDTH = (float)width;
-        SCREEN_HEIGHT = (float)height;
+
+        if (width != framebufferWidth || height != framebufferHeight)
+        {
+            framebufferWidth = width;
+            framebufferHeight = height;
+
+            // Resize the off-screen color attachment.
+            glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, framebufferWidth, framebufferHeight,
+                         0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+            glBindTexture(GL_TEXTURE_2D, 0);
+
+            // Resize its matching depth/stencil attachment.
+            glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
+                                  framebufferWidth, framebufferHeight);
+            glBindRenderbuffer(GL_RENDERBUFFER, 0);
+        }
+
+        SCREEN_WIDTH = width;
+        SCREEN_HEIGHT = height;
+        glViewport(0, 0, framebufferWidth, framebufferHeight);
 
         globalApplication::controller.update();
         globalApplication::controller.processController();
