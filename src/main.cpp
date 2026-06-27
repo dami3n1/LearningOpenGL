@@ -212,15 +212,15 @@ int main()
         1.0f, 0.5f, 0.0f, 1.0f, 0.0f};
 
     float quadVertices[] = {
-        // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates. NOTE that this plane is now much smaller and at the top of the screen
+        // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
         // positions   // texCoords
-        -0.15f, 1.0f, 0.0f, 1.0f,
-        -0.15f, 0.7f, 0.0f, 0.0f,
-        0.15f, 0.7f, 1.0f, 0.0f,
+        -0.3f, 1.0f, 0.0f, 1.0f,
+        -0.3f, 0.7f, 0.0f, 0.0f,
+        0.3f, 0.7f, 1.0f, 0.0f,
 
-        -0.15f, 1.0f, 0.0f, 1.0f,
-        0.15f, 0.7f, 1.0f, 0.0f,
-        0.15f, 1.0f, 1.0f, 1.0f};
+        -0.3f, 1.0f, 0.0f, 1.0f,
+        0.3f, 0.7f, 1.0f, 0.0f,
+        0.3f, 1.0f, 1.0f, 1.0f};
 
     float skyboxVertices[] = {
         // positions
@@ -478,10 +478,11 @@ int main()
 
         glm::mat4 model = glm::mat4(1.0f);
 
-        // normal projection stays the same
+        // The preview quad is twice as wide as it is tall in NDC. Account for
+        // that here so the mirror image is not stretched inside the box.
         glm::mat4 projection = glm::perspective(
             glm::radians(globalApplication::camera.Zoom),
-            (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT,
+            2.0f * (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT,
             0.1f,
             100.0f);
 
@@ -564,7 +565,13 @@ int main()
         shader.use();
         model = glm::mat4(1.0f);
         view = globalApplication::camera.GetViewMatrix();
+        projection = glm::perspective(
+            glm::radians(globalApplication::camera.Zoom),
+            (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT,
+            0.1f,
+            100.0f);
         shader.setMat4("view", view);
+        shader.setMat4("projection", projection);
 
         glBindVertexArray(cubeVAO);
         glActiveTexture(GL_TEXTURE0);
