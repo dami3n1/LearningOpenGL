@@ -71,7 +71,17 @@ unsigned int loadCubemap(vector<std::string> faces)
         unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
         if (data)
         {
-            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            GLenum format;
+            if (nrChannels == 1)
+                format = GL_RED;
+            else if (nrChannels == 2)
+                format = GL_RG;
+            else if (nrChannels == 3)
+                format = GL_RGB;
+            else
+                format = GL_RGBA;
+
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
             stbi_image_free(data);
         }
         else
@@ -336,12 +346,12 @@ int main()
     unsigned int transparentTexture = loadTexture("../assets/blending_transparent_window.png");
 
     vector<std::string> faces{
-        "../assets/skybox/right.jpg",
-        "../assets/skybox/left.jpg",
-        "../assets/skybox/top.jpg",
-        "../assets/skybox/bottom.jpg",
-        "../assets/skybox/front.jpg",
-        "../assets/skybox/back.jpg"};
+        "../assets/skybox2/right.png",
+        "../assets/skybox2/left.png",
+        "../assets/skybox2/top.png",
+        "../assets/skybox2/bottom.png",
+        "../assets/skybox2/front.png",
+        "../assets/skybox2/back.png"};
     unsigned int cubemapTexture = loadCubemap(faces);
 
     globalApplication::controller.showControllers();
