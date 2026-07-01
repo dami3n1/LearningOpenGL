@@ -145,7 +145,7 @@ int main()
     glEnable(GL_DEPTH_TEST); // enable depth testing for 3D
 
     Shader shader("../shaders/defaultShader.vert", "../shaders/defaultShader.frag");
-    Shader reflectionShader("../shaders/reflectionShader.vert", "../shaders/reflectionShader.frag");
+    Shader reflectionShader("../shaders/refractionShader.vert", "../shaders/refractionShader.frag");
     Shader windowShader("../shaders/windowShader.vert", "../shaders/windowShader.frag");
     Shader framebuffershader("../shaders/framebufferShader.vert", "../shaders/framebufferShader.frag");
     Shader skyboxShader("../shaders/skyboxShader.vert", "../shaders/skyboxShader.frag");
