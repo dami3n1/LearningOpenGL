@@ -144,6 +144,7 @@ int main()
     glEnable(GL_DEPTH_TEST); // enable depth testing for 3D
 
     Shader shader("../shaders/defaultShader.vert", "../shaders/defaultShader.frag");
+    Shader reflectionShader("../shaders/reflectionShader.vert", "../shaders/reflectionShader.frag");
     Shader windowShader("../shaders/windowShader.vert", "../shaders/windowShader.frag");
     Shader framebuffershader("../shaders/framebufferShader.vert", "../shaders/framebufferShader.frag");
     Shader skyboxShader("../shaders/skyboxShader.vert", "../shaders/skyboxShader.frag");
@@ -157,51 +158,54 @@ int main()
     in a counter-clockwise order. This takes some practice, but try visualizing this yourself and see that this
     is correct.
 */
-
     float cubeVertices[] = {
-        // Back face
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // Bottom-left
-        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,   // top-right
-        0.5f, -0.5f, -0.5f, 1.0f, 0.0f,  // bottom-right
-        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,   // top-right
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // bottom-left
-        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,  // top-left
-        // Front face
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, // bottom-left
-        0.5f, -0.5f, 0.5f, 1.0f, 0.0f,  // bottom-right
-        0.5f, 0.5f, 0.5f, 1.0f, 1.0f,   // top-right
-        0.5f, 0.5f, 0.5f, 1.0f, 1.0f,   // top-right
-        -0.5f, 0.5f, 0.5f, 0.0f, 1.0f,  // top-left
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, // bottom-left
-        // Left face
-        -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,   // top-right
-        -0.5f, 0.5f, -0.5f, 1.0f, 1.0f,  // top-left
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // bottom-left
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // bottom-left
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,  // bottom-right
-        -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,   // top-right
-                                         // Right face
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,    // top-left
-        0.5f, -0.5f, -0.5f, 0.0f, 1.0f,  // bottom-right
-        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,   // top-right
-        0.5f, -0.5f, -0.5f, 0.0f, 1.0f,  // bottom-right
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,    // top-left
-        0.5f, -0.5f, 0.5f, 0.0f, 0.0f,   // bottom-left
-        // Bottom face
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // top-right
-        0.5f, -0.5f, -0.5f, 1.0f, 1.0f,  // top-left
-        0.5f, -0.5f, 0.5f, 1.0f, 0.0f,   // bottom-left
-        0.5f, -0.5f, 0.5f, 1.0f, 0.0f,   // bottom-left
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,  // bottom-right
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // top-right
-        // Top face
-        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, // top-left
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,   // bottom-right
-        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,  // top-right
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,   // bottom-right
-        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, // top-left
-        -0.5f, 0.5f, 0.5f, 0.0f, 0.0f   // bottom-left
-    };
+        // back (-Z)
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+
+        // front (+Z)
+        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+
+        // left (-X)
+        -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
+        -0.5f, 0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
+        -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
+
+        // right (+X)
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
+        0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+        0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+        0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
+        0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
+
+        // bottom (-Y)
+        -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
+        0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
+        0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
+        0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
+        -0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
+
+        // top (+Y)
+        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+        0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
+        0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+        0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
+        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+        -0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f};
     float planeVertices[] = {
         // positions          // texture Coords (note we set these higher than 1 (together with GL_REPEAT as texture wrapping mode). this will cause the floor texture to repeat)
         5.0f, -0.5f, 5.0f, 2.0f, 0.0f,
@@ -290,9 +294,9 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), &cubeVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
     glBindVertexArray(0);
     // plane VAO
     unsigned int planeVAO, planeVBO;
@@ -504,11 +508,17 @@ int main()
         shader.setMat4("view", view);
         shader.setMat4("projection", projection);
 
+        reflectionShader.use();
+        reflectionShader.setMat4("view", view);
+        reflectionShader.setMat4("projection", projection);
+        reflectionShader.setVec3("cameraPos", globalApplication::camera.Position);
+
         glm::vec3 positions[2] = {
             glm::vec3(-1.0f, 0.0f, -1.0f),
             glm::vec3(2.0f, 0.0f, 0.0f)};
 
         glBindVertexArray(cubeVAO);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, cubeTexture);
         for (int i = 0; i < 2; i++)
@@ -517,13 +527,14 @@ int main()
 
             model = glm::mat4(1.0f);
             model = glm::translate(model, pos);
-            shader.setMat4("model", model);
+            reflectionShader.setMat4("model", model);
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
         glBindVertexArray(0);
 
         glDisable(GL_CULL_FACE);
 
+        shader.use();
         // DRAW FLOOR
         glBindVertexArray(planeVAO);
         glBindTexture(GL_TEXTURE_2D, floorTexture);
@@ -583,7 +594,13 @@ int main()
         shader.setMat4("view", view);
         shader.setMat4("projection", projection);
 
+        reflectionShader.use();
+        reflectionShader.setMat4("view", view);
+        reflectionShader.setMat4("projection", projection);
+        reflectionShader.setVec3("cameraPos", globalApplication::camera.Position);
+
         glBindVertexArray(cubeVAO);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, cubeTexture);
         for (int i = 0; i < 2; i++)
@@ -592,11 +609,12 @@ int main()
 
             model = glm::mat4(1.0f);
             model = glm::translate(model, pos);
-            shader.setMat4("model", model);
+            reflectionShader.setMat4("model", model);
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
         glBindVertexArray(0);
 
+        shader.use();
         glDisable(GL_CULL_FACE);
 
         // DRAW FLOOR
