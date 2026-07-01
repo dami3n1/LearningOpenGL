@@ -13,6 +13,7 @@
 #include "windowSystem.h"
 #include "logger.h"
 #include "imguiLayer.h"
+#include <chrono>
 
 #include "camera.h"
 #include "global.h"
@@ -349,6 +350,14 @@ int main()
     unsigned int floorTexture = loadTexture("../assets/metal.png");
     unsigned int transparentTexture = loadTexture("../assets/blending_transparent_window.png");
 
+    auto t0 = std::chrono::high_resolution_clock::now();
+    Model backpack("../assets/backpack/backpack.obj");
+    auto t1 = std::chrono::high_resolution_clock::now();
+
+    std::cout << "Total load: "
+              << std::chrono::duration<double>(t1 - t0).count()
+              << "s\n";
+
     vector<std::string> faces{
         "../assets/skybox2/right.png",
         "../assets/skybox2/left.png",
@@ -532,6 +541,12 @@ int main()
         }
         glBindVertexArray(0);
 
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, 0.02f, 1.5f));
+        model = glm::scale(model, glm::vec3(0.3f));
+        reflectionShader.setMat4("model", model);
+        backpack.Draw(reflectionShader);
+
         glDisable(GL_CULL_FACE);
 
         shader.use();
@@ -613,6 +628,12 @@ int main()
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
         glBindVertexArray(0);
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, 0.02f, 1.5f));
+        model = glm::scale(model, glm::vec3(0.3f));
+        reflectionShader.setMat4("model", model);
+        backpack.Draw(reflectionShader);
 
         shader.use();
         glDisable(GL_CULL_FACE);
