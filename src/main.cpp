@@ -346,7 +346,6 @@ int main()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
     glBindVertexArray(0);
 
-    unsigned int cubeTexture = loadTexture("../assets/container.jpg");
     unsigned int floorTexture = loadTexture("../assets/metal.png");
     unsigned int transparentTexture = loadTexture("../assets/blending_transparent_window.png");
 
@@ -384,6 +383,12 @@ int main()
 
     shader.use();
     shader.setInt("texture1", 0);
+
+    reflectionShader.use();
+    reflectionShader.setInt("skybox", 0);
+
+    skyboxShader.use();
+    skyboxShader.setInt("skybox", 0);
 
     windowShader.use();
     windowShader.setInt("windowTexture", 0);
@@ -484,11 +489,8 @@ int main()
             sorted[distance] = windows[i];
         }
 
-        // first render pass: mirror texture.
-        // bind to framebuffer and draw to color texture as we normally
-        // would, but with the view camera reversed.
-        // bind to framebuffer and draw scene as we normally would to color texture
-        // ------------------------------------------------------------------------
+        // PASS 1: OFF-SCREEN FRAMEBUFFER
+        // Draw the reversed-camera scene into textureColorbuffer.
         glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
         glEnable(GL_DEPTH_TEST); // enable depth testing for 3D
 
@@ -496,8 +498,6 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         // glEnable(GL_DEPTH_TEST); // enable depth testing for 3D
         glEnable(GL_CULL_FACE);
-
-        shader.use();
 
         glm::mat4 model = glm::mat4(1.0f);
 
@@ -513,7 +513,10 @@ int main()
             globalApplication::camera.Position,
             globalApplication::camera.Position - globalApplication::camera.Front,
             globalApplication::camera.Up);
+        glm::mat4 skyboxView = glm::mat4(glm::mat3(view));
 
+        // Shader setup for the entire off-screen pass.
+        shader.use();
         shader.setMat4("view", view);
         shader.setMat4("projection", projection);
 
@@ -522,14 +525,23 @@ int main()
         reflectionShader.setMat4("projection", projection);
         reflectionShader.setVec3("cameraPos", globalApplication::camera.Position);
 
+        skyboxShader.use();
+        skyboxShader.setMat4("view", skyboxView);
+        skyboxShader.setMat4("projection", projection);
+
+        windowShader.use();
+        windowShader.setMat4("view", view);
+        windowShader.setMat4("projection", projection);
+
         glm::vec3 positions[2] = {
             glm::vec3(-1.0f, 0.0f, -1.0f),
             glm::vec3(2.0f, 0.0f, 0.0f)};
 
-        glBindVertexArray(cubeVAO);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        // Reflective cube shader.
+        reflectionShader.use();
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, cubeTexture);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        glBindVertexArray(cubeVAO);
         for (int i = 0; i < 2; i++)
         {
             glm::vec3 pos = positions[i];
@@ -549,20 +561,18 @@ int main()
 
         glDisable(GL_CULL_FACE);
 
+        // Floor shader.
         shader.use();
-        // DRAW FLOOR
         glBindVertexArray(planeVAO);
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, floorTexture);
         shader.setMat4("model", glm::mat4(1.0f));
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
 
-        // Draw the skybox before transparent objects so they blend over it.
+        // Skybox shader.
         glDepthFunc(GL_LEQUAL); // set depth function to less than (default)
         skyboxShader.use();
-        glm::mat4 skyboxView = glm::mat4(glm::mat3(view));
-        skyboxShader.setMat4("view", skyboxView);
-        skyboxShader.setMat4("projection", projection);
         // skybox cube
         glBindVertexArray(skyboxVAO);
         glActiveTexture(GL_TEXTURE0);
@@ -571,9 +581,8 @@ int main()
         glBindVertexArray(0);
         glDepthFunc(GL_LESS); // set depth function back to default
 
+        // Transparent-window shader.
         windowShader.use();
-        windowShader.setMat4("view", view);
-        windowShader.setMat4("projection", projection);
         glDepthMask(GL_FALSE);
         glBindVertexArray(transparentVAO);
         glActiveTexture(GL_TEXTURE0);
@@ -589,16 +598,15 @@ int main()
         glBindVertexArray(0);
         glDepthMask(GL_TRUE);
 
-        // second render pass: draw as normal
-        // ----------------------------------
-        glBindFramebuffer(GL_FRAMEBUFFER, 0); // bind to default framebuffer again and draw a quad plane with the attached framebuffer color texture
+        // PASS 2: REGULAR SCREEN
+        // Framebuffer 0 is the window's default framebuffer.
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST); // enable depth testing for 3D
         glEnable(GL_CULL_FACE);
 
-        shader.use();
         model = glm::mat4(1.0f);
         view = globalApplication::camera.GetViewMatrix();
         projection = glm::perspective(
@@ -606,6 +614,10 @@ int main()
             (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT,
             0.1f,
             100.0f);
+        skyboxView = glm::mat4(glm::mat3(view));
+
+        // Shader setup for the entire regular-screen pass.
+        shader.use();
         shader.setMat4("view", view);
         shader.setMat4("projection", projection);
 
@@ -614,10 +626,19 @@ int main()
         reflectionShader.setMat4("projection", projection);
         reflectionShader.setVec3("cameraPos", globalApplication::camera.Position);
 
-        glBindVertexArray(cubeVAO);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        skyboxShader.use();
+        skyboxShader.setMat4("view", skyboxView);
+        skyboxShader.setMat4("projection", projection);
+
+        windowShader.use();
+        windowShader.setMat4("view", view);
+        windowShader.setMat4("projection", projection);
+
+        // Reflective cube shader.
+        reflectionShader.use();
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, cubeTexture);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        glBindVertexArray(cubeVAO);
         for (int i = 0; i < 2; i++)
         {
             glm::vec3 pos = positions[i];
@@ -635,22 +656,20 @@ int main()
         reflectionShader.setMat4("model", model);
         backpack.Draw(reflectionShader);
 
-        shader.use();
         glDisable(GL_CULL_FACE);
 
-        // DRAW FLOOR
+        // Floor shader.
+        shader.use();
         glBindVertexArray(planeVAO);
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, floorTexture);
         shader.setMat4("model", glm::mat4(1.0f));
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
 
-        // Draw the skybox before transparent objects so they blend over it.
+        // Skybox shader.
         glDepthFunc(GL_LEQUAL); // set depth function to less than (default)
         skyboxShader.use();
-        skyboxView = glm::mat4(glm::mat3(view)); // remove translation from the view matrix
-        skyboxShader.setMat4("view", skyboxView);
-        skyboxShader.setMat4("projection", projection);
         // skybox cube
         glBindVertexArray(skyboxVAO);
         glActiveTexture(GL_TEXTURE0);
@@ -659,9 +678,8 @@ int main()
         glBindVertexArray(0);
         glDepthFunc(GL_LESS); // set depth function back to default
 
+        // Transparent-window shader.
         windowShader.use();
-        windowShader.setMat4("view", view);
-        windowShader.setMat4("projection", projection);
         glDepthMask(GL_FALSE);
         glBindVertexArray(transparentVAO);
         glActiveTexture(GL_TEXTURE0);
@@ -677,11 +695,12 @@ int main()
         glBindVertexArray(0);
         glDepthMask(GL_TRUE);
 
-        // now draw the mirror quad with screen texture
-        // --------------------------------------------
+        // FRAMEBUFFER PREVIEW
+        // Draw textureColorbuffer onto the small screen-space quad.
         glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
         framebuffershader.use();
         glBindVertexArray(quadVAO);
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
