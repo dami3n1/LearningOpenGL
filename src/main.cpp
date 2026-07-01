@@ -160,53 +160,49 @@ int main()
     is correct.
 */
     float cubeVertices[] = {
-        // back (-Z)
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
-        0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
-        0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
-        0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
-        -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
-
-        // front (+Z)
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
-        0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
-        0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
-        0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
-        -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
-
-        // left (-X)
-        -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
-        -0.5f, 0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
-        -0.5f, -0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
-        -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
-
-        // right (+X)
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
-        0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
-        0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
-        0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
-        0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
-
-        // bottom (-Y)
-        -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
-        0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
-        0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
-        0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
-        -0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
-
-        // top (+Y)
-        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
-        0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
-        0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
-        0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
-        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
-        -0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f};
+        // Back face
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // Bottom-left
+        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,   // top-right
+        0.5f, -0.5f, -0.5f, 1.0f, 0.0f,  // bottom-right
+        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,   // top-right
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // bottom-left
+        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,  // top-left
+        // Front face
+        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, // bottom-left
+        0.5f, -0.5f, 0.5f, 1.0f, 0.0f,  // bottom-right
+        0.5f, 0.5f, 0.5f, 1.0f, 1.0f,   // top-right
+        0.5f, 0.5f, 0.5f, 1.0f, 1.0f,   // top-right
+        -0.5f, 0.5f, 0.5f, 0.0f, 1.0f,  // top-left
+        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, // bottom-left
+        // Left face
+        -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,   // top-right
+        -0.5f, 0.5f, -0.5f, 1.0f, 1.0f,  // top-left
+        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // bottom-left
+        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // bottom-left
+        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,  // bottom-right
+        -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,   // top-right
+                                         // Right face
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,    // top-left
+        0.5f, -0.5f, -0.5f, 0.0f, 1.0f,  // bottom-right
+        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,   // top-right
+        0.5f, -0.5f, -0.5f, 0.0f, 1.0f,  // bottom-right
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,    // top-left
+        0.5f, -0.5f, 0.5f, 0.0f, 0.0f,   // bottom-left
+        // Bottom face
+        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // top-right
+        0.5f, -0.5f, -0.5f, 1.0f, 1.0f,  // top-left
+        0.5f, -0.5f, 0.5f, 1.0f, 0.0f,   // bottom-left
+        0.5f, -0.5f, 0.5f, 1.0f, 0.0f,   // bottom-left
+        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,  // bottom-right
+        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // top-right
+        // Top face
+        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, // top-left
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,   // bottom-right
+        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,  // top-right
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,   // bottom-right
+        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, // top-left
+        -0.5f, 0.5f, 0.5f, 0.0f, 0.0f   // bottom-left
+    };
     float planeVertices[] = {
         // positions          // texture Coords (note we set these higher than 1 (together with GL_REPEAT as texture wrapping mode). this will cause the floor texture to repeat)
         5.0f, -0.5f, 5.0f, 2.0f, 0.0f,
@@ -295,9 +291,9 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), &cubeVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
     glBindVertexArray(0);
     // plane VAO
     unsigned int planeVAO, planeVBO;
@@ -347,6 +343,7 @@ int main()
     glBindVertexArray(0);
 
     unsigned int floorTexture = loadTexture("../assets/metal.png");
+    unsigned int cubeTexture = loadTexture("../assets/container.jpg");
     unsigned int transparentTexture = loadTexture("../assets/blending_transparent_window.png");
 
     auto t0 = std::chrono::high_resolution_clock::now();
@@ -464,14 +461,12 @@ int main()
 
             // Resize the off-screen color attachment.
             glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, framebufferWidth, framebufferHeight,
-                         0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, framebufferWidth, framebufferHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
             glBindTexture(GL_TEXTURE_2D, 0);
 
             // Resize its matching depth/stencil attachment.
             glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
-                                  framebufferWidth, framebufferHeight);
+            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, framebufferWidth, framebufferHeight);
             glBindRenderbuffer(GL_RENDERBUFFER, 0);
         }
 
@@ -503,16 +498,8 @@ int main()
 
         // The preview quad is twice as wide as it is tall in NDC. Account for
         // that here so the mirror image is not stretched inside the box.
-        glm::mat4 projection = glm::perspective(
-            glm::radians(globalApplication::camera.Zoom),
-            2.0f * (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT,
-            0.1f,
-            100.0f);
-
-        glm::mat4 view = glm::lookAt(
-            globalApplication::camera.Position,
-            globalApplication::camera.Position - globalApplication::camera.Front,
-            globalApplication::camera.Up);
+        glm::mat4 projection = glm::perspective(glm::radians(globalApplication::camera.Zoom), 2.0f * (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 view = glm::lookAt(globalApplication::camera.Position, globalApplication::camera.Position - globalApplication::camera.Front, globalApplication::camera.Up);
         glm::mat4 skyboxView = glm::mat4(glm::mat3(view));
 
         // Shader setup for the entire off-screen pass.
@@ -537,10 +524,10 @@ int main()
             glm::vec3(-1.0f, 0.0f, -1.0f),
             glm::vec3(2.0f, 0.0f, 0.0f)};
 
-        // Reflective cube shader.
-        reflectionShader.use();
+        // Regular textured cubes.
+        shader.use();
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        glBindTexture(GL_TEXTURE_2D, cubeTexture);
         glBindVertexArray(cubeVAO);
         for (int i = 0; i < 2; i++)
         {
@@ -548,11 +535,14 @@ int main()
 
             model = glm::mat4(1.0f);
             model = glm::translate(model, pos);
-            reflectionShader.setMat4("model", model);
+            shader.setMat4("model", model);
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
         glBindVertexArray(0);
 
+        reflectionShader.use();
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 0.02f, 1.5f));
         model = glm::scale(model, glm::vec3(0.3f));
@@ -609,11 +599,7 @@ int main()
 
         model = glm::mat4(1.0f);
         view = globalApplication::camera.GetViewMatrix();
-        projection = glm::perspective(
-            glm::radians(globalApplication::camera.Zoom),
-            (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT,
-            0.1f,
-            100.0f);
+        projection = glm::perspective(glm::radians(globalApplication::camera.Zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
         skyboxView = glm::mat4(glm::mat3(view));
 
         // Shader setup for the entire regular-screen pass.
@@ -634,10 +620,10 @@ int main()
         windowShader.setMat4("view", view);
         windowShader.setMat4("projection", projection);
 
-        // Reflective cube shader.
-        reflectionShader.use();
+        // Regular textured cubes.
+        shader.use();
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        glBindTexture(GL_TEXTURE_2D, cubeTexture);
         glBindVertexArray(cubeVAO);
         for (int i = 0; i < 2; i++)
         {
@@ -645,11 +631,14 @@ int main()
 
             model = glm::mat4(1.0f);
             model = glm::translate(model, pos);
-            reflectionShader.setMat4("model", model);
+            shader.setMat4("model", model);
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
         glBindVertexArray(0);
 
+        reflectionShader.use();
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 0.02f, 1.5f));
         model = glm::scale(model, glm::vec3(0.3f));
