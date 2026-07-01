@@ -52,9 +52,11 @@ set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(ASSIMP_INSTALL OFF CACHE BOOL "" FORCE)
 set(ASSIMP_WARNINGS_AS_ERRORS OFF CACHE BOOL "" FORCE)
 
+# Disable everything by default
 set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF CACHE BOOL "" FORCE)
 set(ASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT OFF CACHE BOOL "" FORCE)
 
+# Enable only what you likely need
 set(ASSIMP_BUILD_OBJ_IMPORTER ON CACHE BOOL "" FORCE)
 set(ASSIMP_BUILD_FBX_IMPORTER ON CACHE BOOL "" FORCE)
 set(ASSIMP_BUILD_GLTF_IMPORTER ON CACHE BOOL "" FORCE)
@@ -68,10 +70,8 @@ FetchContent_MakeAvailable(imgui)
 FetchContent_MakeAvailable(assimp)
 FetchContent_MakeAvailable(glm)
 
-# Optional Assimp optimization
-if(TARGET assimp)
-    target_compile_options(assimp PRIVATE -O2)
-endif()
+#assimp optimization
+target_compile_options(assimp PRIVATE -O2)#ultra performance: -O3 and -flto
 
 # --------------------------------------------------
 # OpenGL
@@ -121,7 +121,10 @@ target_link_libraries(imgui PUBLIC
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
     "${CMAKE_SOURCE_DIR}/src/*.cpp"
-)
+)# Optional Assimp optimization
+if(TARGET assimp)
+    target_compile_options(assimp PRIVATE -O2)
+endif()
 
 add_executable(MyApp ${SOURCES})
 
