@@ -145,9 +145,8 @@ int main()
     glEnable(GL_DEPTH_TEST); // enable depth testing for 3D
 
     Shader shader("../shaders/defaultShader.vert", "../shaders/defaultShader.frag");
-    Shader reflectionShader("../shaders/refractionShader.vert", "../shaders/refractionShader.frag");
+    Shader reflectionShader("../shaders/reflectionShader.vert", "../shaders/reflectionShader.frag");
     Shader windowShader("../shaders/windowShader.vert", "../shaders/windowShader.frag");
-    Shader framebuffershader("../shaders/framebufferShader.vert", "../shaders/framebufferShader.frag");
     Shader skyboxShader("../shaders/skyboxShader.vert", "../shaders/skyboxShader.frag");
 
     /*
@@ -221,17 +220,6 @@ int main()
         0.0f, 0.5f, 0.0f, 0.0f, 0.0f,
         1.0f, -0.5f, 0.0f, 1.0f, 1.0f,
         1.0f, 0.5f, 0.0f, 1.0f, 0.0f};
-
-    float quadVertices[] = {
-        // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
-        // positions   // texCoords
-        -0.3f, 1.0f, 0.0f, 1.0f,
-        -0.3f, 0.7f, 0.0f, 0.0f,
-        0.3f, 0.7f, 1.0f, 0.0f,
-
-        -0.3f, 1.0f, 0.0f, 1.0f,
-        0.3f, 0.7f, 1.0f, 0.0f,
-        0.3f, 1.0f, 1.0f, 1.0f};
 
     float skyboxVertices[] = {
         // positions
@@ -319,18 +307,6 @@ int main()
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
     glBindVertexArray(0);
-    // quad VAO
-    unsigned int quadVAO, quadVBO;
-    glGenVertexArrays(1, &quadVAO);
-    glGenBuffers(1, &quadVBO);
-    glBindVertexArray(quadVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)(2 * sizeof(float)));
-    glBindVertexArray(0);
     // skybox VAO
     unsigned int skyboxVAO, skyboxVBO;
     glGenVertexArrays(1, &skyboxVAO);
@@ -371,8 +347,6 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     int width = SCREEN_WIDTH, height = SCREEN_HEIGHT;
-    int framebufferWidth = SCREEN_WIDTH;
-    int framebufferHeight = SCREEN_HEIGHT;
 
     glEnable(GL_DEPTH_TEST); // enable depth testing for 3D
     glEnable(GL_BLEND);
@@ -389,50 +363,6 @@ int main()
 
     windowShader.use();
     windowShader.setInt("windowTexture", 0);
-
-    framebuffershader.use();
-    framebuffershader.setInt("screenTexture", 0);
-
-    // create framebuffer and bind it
-    unsigned int framebuffer;
-    glGenFramebuffers(1, &framebuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-
-    // create a texture image and attach color attachment to framebuffer
-    // generate texture
-    unsigned int textureColorbuffer;
-    glGenTextures(1, &textureColorbuffer);
-    glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    // attach it to currently bound framebuffer object
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
-
-    // create a renderbuffer object for depth and stencil attachment (we won't be sampling these)
-    unsigned int rbo;
-    glGenRenderbuffers(1, &rbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-    // precision of 24 bits for depth and 8 bits for stencil
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCREEN_WIDTH, SCREEN_HEIGHT);
-    // unbind renderbuffer object after we set its storage so that we won't accidentally mess with it
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-    // attach the renderbuffer object to the framebuffer's depth and stencil attachment
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
-
-    // check if framebuffer is complete
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        logger(ERROR, "ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
-
-    // unbind framebuffer so that we can render to default framebuffer again
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    // Now we draw to our framebuffer object then swap to main buffer to display what was on our object
-    // This allows us to do post processing effects and other cool things by sampling the texture we attached
-    // to our framebuffer object and applying effects to it before we draw it to the main framebuffer
 
     // draw as wireframe
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -453,26 +383,9 @@ int main()
         lastFrame = currentFrame;
 
         glfwGetFramebufferSize(globalApplication::window, &width, &height);
-
-        if (width != framebufferWidth || height != framebufferHeight)
-        {
-            framebufferWidth = width;
-            framebufferHeight = height;
-
-            // Resize the off-screen color attachment.
-            glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, framebufferWidth, framebufferHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
-            glBindTexture(GL_TEXTURE_2D, 0);
-
-            // Resize its matching depth/stencil attachment.
-            glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, framebufferWidth, framebufferHeight);
-            glBindRenderbuffer(GL_RENDERBUFFER, 0);
-        }
-
         SCREEN_WIDTH = width;
         SCREEN_HEIGHT = height;
-        glViewport(0, 0, framebufferWidth, framebufferHeight);
+        glViewport(0, 0, width, height);
 
         globalApplication::controller.update();
         globalApplication::controller.processController();
@@ -484,123 +397,19 @@ int main()
             sorted[distance] = windows[i];
         }
 
-        // PASS 1: OFF-SCREEN FRAMEBUFFER
-        // Draw the reversed-camera scene into textureColorbuffer.
-        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-        glEnable(GL_DEPTH_TEST); // enable depth testing for 3D
-
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        // glEnable(GL_DEPTH_TEST); // enable depth testing for 3D
-        glEnable(GL_CULL_FACE);
-
-        glm::mat4 model = glm::mat4(1.0f);
-
-        // The preview quad is twice as wide as it is tall in NDC. Account for
-        // that here so the mirror image is not stretched inside the box.
-        glm::mat4 projection = glm::perspective(glm::radians(globalApplication::camera.Zoom), 2.0f * (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
-        glm::mat4 view = glm::lookAt(globalApplication::camera.Position, globalApplication::camera.Position - globalApplication::camera.Front, globalApplication::camera.Up);
-        glm::mat4 skyboxView = glm::mat4(glm::mat3(view));
-
-        // Shader setup for the entire off-screen pass.
-        shader.use();
-        shader.setMat4("view", view);
-        shader.setMat4("projection", projection);
-
-        reflectionShader.use();
-        reflectionShader.setMat4("view", view);
-        reflectionShader.setMat4("projection", projection);
-        reflectionShader.setVec3("cameraPos", globalApplication::camera.Position);
-
-        skyboxShader.use();
-        skyboxShader.setMat4("view", skyboxView);
-        skyboxShader.setMat4("projection", projection);
-
-        windowShader.use();
-        windowShader.setMat4("view", view);
-        windowShader.setMat4("projection", projection);
-
         glm::vec3 positions[2] = {
             glm::vec3(-1.0f, 0.0f, -1.0f),
             glm::vec3(2.0f, 0.0f, 0.0f)};
 
-        // Regular textured cubes.
-        shader.use();
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, cubeTexture);
-        glBindVertexArray(cubeVAO);
-        for (int i = 0; i < 2; i++)
-        {
-            glm::vec3 pos = positions[i];
-
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, pos);
-            shader.setMat4("model", model);
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
-        glBindVertexArray(0);
-
-        reflectionShader.use();
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 0.02f, 1.5f));
-        model = glm::scale(model, glm::vec3(0.3f));
-        reflectionShader.setMat4("model", model);
-        backpack.Draw(reflectionShader);
-
-        glDisable(GL_CULL_FACE);
-
-        // Floor shader.
-        shader.use();
-        glBindVertexArray(planeVAO);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, floorTexture);
-        shader.setMat4("model", glm::mat4(1.0f));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        glBindVertexArray(0);
-
-        // Skybox shader.
-        glDepthFunc(GL_LEQUAL); // set depth function to less than (default)
-        skyboxShader.use();
-        // skybox cube
-        glBindVertexArray(skyboxVAO);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        glBindVertexArray(0);
-        glDepthFunc(GL_LESS); // set depth function back to default
-
-        // Transparent-window shader.
-        windowShader.use();
-        glDepthMask(GL_FALSE);
-        glBindVertexArray(transparentVAO);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, transparentTexture);
-        // reverse iterator so we draw the ones behind first before the ones in front
-        for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
-        {
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, it->second);
-            windowShader.setMat4("model", model);
-            glDrawArrays(GL_TRIANGLES, 0, 6);
-        }
-        glBindVertexArray(0);
-        glDepthMask(GL_TRUE);
-
-        // PASS 2: REGULAR SCREEN
-        // Framebuffer 0 is the window's default framebuffer.
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST); // enable depth testing for 3D
         glEnable(GL_CULL_FACE);
 
-        model = glm::mat4(1.0f);
-        view = globalApplication::camera.GetViewMatrix();
-        projection = glm::perspective(glm::radians(globalApplication::camera.Zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
-        skyboxView = glm::mat4(glm::mat3(view));
+        glm::mat4 model = glm::mat4(1.0f);
+        glm::mat4 view = globalApplication::camera.GetViewMatrix();
+        glm::mat4 projection = glm::perspective(glm::radians(globalApplication::camera.Zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 skyboxView = glm::mat4(glm::mat3(view));
 
         // Shader setup for the entire regular-screen pass.
         shader.use();
@@ -636,14 +445,14 @@ int main()
         }
         glBindVertexArray(0);
 
-        reflectionShader.use();
+        shader.use();
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 0.02f, 1.5f));
         model = glm::scale(model, glm::vec3(0.3f));
-        reflectionShader.setMat4("model", model);
-        backpack.Draw(reflectionShader);
+        shader.setMat4("model", model);
+        backpack.Draw(shader);
 
         glDisable(GL_CULL_FACE);
 
@@ -683,15 +492,6 @@ int main()
         }
         glBindVertexArray(0);
         glDepthMask(GL_TRUE);
-
-        // FRAMEBUFFER PREVIEW
-        // Draw textureColorbuffer onto the small screen-space quad.
-        glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
-        framebuffershader.use();
-        glBindVertexArray(quadVAO);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
 
         // Rendering
         // (Your code clears your framebuffer, renders your other stuff etc.)
