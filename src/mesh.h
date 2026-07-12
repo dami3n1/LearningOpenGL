@@ -46,13 +46,19 @@ public:
     unsigned int VAO;
 
     // constructor
-    Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures) {
+    Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures,
+         const glm::vec3 &diffuseColor = glm::vec3(1.0f),
+         const glm::vec3 &specularColor = glm::vec3(0.5f),
+         const glm::vec3 &emissionColor = glm::vec3(0.0f)) {
         this->vertices = vertices;
         this->indices = indices;
         this->textures = textures;
 
         // now that we have all the required data, set the vertex buffers and its attribute pointers.
         setupMesh();
+        diffuseColorTexture = createColorTexture(diffuseColor);
+        specularColorTexture = createColorTexture(specularColor);
+        emissionColorTexture = createColorTexture(emissionColor);
     }
 
     // render the mesh
@@ -82,6 +88,26 @@ public:
             glBindTexture(GL_TEXTURE_2D, textures[i].id);
         }
 
+        // The lighting shader uses Material-struct sampler names. Prefer image
+        // maps when present, otherwise use the solid colors imported from MTL.
+        GLint materialDiffuse = glGetUniformLocation(shader.ID, "material.diffuse");
+        if (materialDiffuse >= 0) {
+            unsigned int diffuse = findTexture("texture_diffuse", diffuseColorTexture);
+            unsigned int specular = findTexture("texture_specular", specularColorTexture);
+
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, diffuse);
+            glUniform1i(materialDiffuse, 0);
+
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, specular);
+            glUniform1i(glGetUniformLocation(shader.ID, "material.specular"), 1);
+
+            glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_2D, emissionColorTexture);
+            glUniform1i(glGetUniformLocation(shader.ID, "material.emission"), 2);
+        }
+
         // draw mesh
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(indices.size()), GL_UNSIGNED_INT, 0);
@@ -94,6 +120,32 @@ public:
 private:
     // render data
     unsigned int VBO, EBO;
+    unsigned int diffuseColorTexture;
+    unsigned int specularColorTexture;
+    unsigned int emissionColorTexture;
+
+    unsigned int findTexture(const string &type, unsigned int fallback) const {
+        for (const Texture &texture : textures) {
+            if (texture.type == type)
+                return texture.id;
+        }
+        return fallback;
+    }
+
+    unsigned int createColorTexture(const glm::vec3 &color) {
+        unsigned char pixel[3] = {
+            static_cast<unsigned char>(glm::clamp(color.r, 0.0f, 1.0f) * 255.0f),
+            static_cast<unsigned char>(glm::clamp(color.g, 0.0f, 1.0f) * 255.0f),
+            static_cast<unsigned char>(glm::clamp(color.b, 0.0f, 1.0f) * 255.0f)};
+
+        unsigned int texture;
+        glGenTextures(1, &texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, pixel);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        return texture;
+    }
 
     // initializes all the buffer objects/arrays
     void setupMesh() {

@@ -37,8 +37,8 @@ public:
     bool gammaCorrection;
 
     // constructor, expects a filepath to a 3D model.
-    Model(string const &path, bool gamma = false) : gammaCorrection(gamma) {
-        loadModel(path);
+    Model(string const &path, bool gamma = false, bool flipUVs = true) : gammaCorrection(gamma) {
+        loadModel(path, flipUVs);
     }
 
     // draws the model, and thus all its meshes
@@ -49,12 +49,18 @@ public:
 
 private:
     // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
-    void loadModel(string const &path) {
+    void loadModel(string const &path, bool flipUVs) {
         // read file via ASSIMP
         Assimp::Importer importer;
-        const aiScene *scene = importer.ReadFile(
-            path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace |
-                  aiProcess_OptimizeMeshes);
+        unsigned int importFlags =
+            aiProcess_Triangulate |
+            aiProcess_GenSmoothNormals |
+            aiProcess_CalcTangentSpace |
+            aiProcess_OptimizeMeshes;
+        if (flipUVs)
+            importFlags |= aiProcess_FlipUVs;
+
+        const aiScene *scene = importer.ReadFile(path, importFlags);
         // check for errors
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero
         {
@@ -159,8 +165,21 @@ private:
         std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height");
         textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
+        aiColor3D diffuseColor(1.0f, 1.0f, 1.0f);
+        aiColor3D specularColor(0.5f, 0.5f, 0.5f);
+        aiColor3D emissionColor(0.0f, 0.0f, 0.0f);
+        material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuseColor);
+        material->Get(AI_MATKEY_COLOR_SPECULAR, specularColor);
+        material->Get(AI_MATKEY_COLOR_EMISSIVE, emissionColor);
+
         // return a mesh object created from the extracted mesh data
-        return Mesh(vertices, indices, textures);
+        return Mesh(
+            vertices,
+            indices,
+            textures,
+            glm::vec3(diffuseColor.r, diffuseColor.g, diffuseColor.b),
+            glm::vec3(specularColor.r, specularColor.g, specularColor.b),
+            glm::vec3(emissionColor.r, emissionColor.g, emissionColor.b));
     }
 
     // checks all material textures of a given type and loads the textures if they're not loaded yet.
