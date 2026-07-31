@@ -1,5 +1,3 @@
-#include <cmath>
-#include <iomanip>
 #include <iostream>
 #include <ostream>
 
@@ -205,6 +203,11 @@ int main() {
                          "../shaders/light_cube.frag");
   Shader lightingShader("../shaders/illuminateShader.vert",
                         "../shaders/illuminateShader.frag");
+  // for ubo example
+  Shader shaderRed("../shaders/uboshader.vert", "../shaders/red.frag");
+  Shader shaderGreen("../shaders/uboshader.vert", "../shaders/green.frag");
+  Shader shaderBlue("../shaders/uboshader.vert", "../shaders/blue.frag");
+  Shader shaderYellow("../shaders/uboshader.vert", "../shaders/yellow.frag");
 
   /*
   Remember: to specify vertices in a counter-clockwise winding order you need to
@@ -260,6 +263,127 @@ int main() {
       0.5f, 0.5f, 0.5f, 1.0f, 0.0f,   // bottom-right
       -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, // top-left
       -0.5f, 0.5f, 0.5f, 0.0f, 0.0f   // bottom-left
+  };
+  float regularCube[] = {
+      // Back face (-Z)
+      0.5f,
+      -0.5f,
+      -0.5f,
+      -0.5f,
+      -0.5f,
+      -0.5f,
+      -0.5f,
+      0.5f,
+      -0.5f,
+      -0.5f,
+      0.5f,
+      -0.5f,
+      0.5f,
+      0.5f,
+      -0.5f,
+      0.5f,
+      -0.5f,
+      -0.5f,
+
+      // Front face (+Z)
+      -0.5f,
+      -0.5f,
+      0.5f,
+      0.5f,
+      -0.5f,
+      0.5f,
+      0.5f,
+      0.5f,
+      0.5f,
+      0.5f,
+      0.5f,
+      0.5f,
+      -0.5f,
+      0.5f,
+      0.5f,
+      -0.5f,
+      -0.5f,
+      0.5f,
+
+      // Left face (-X)
+      -0.5f,
+      -0.5f,
+      -0.5f,
+      -0.5f,
+      -0.5f,
+      0.5f,
+      -0.5f,
+      0.5f,
+      0.5f,
+      -0.5f,
+      0.5f,
+      0.5f,
+      -0.5f,
+      0.5f,
+      -0.5f,
+      -0.5f,
+      -0.5f,
+      -0.5f,
+
+      // Right face (+X)
+      0.5f,
+      -0.5f,
+      0.5f,
+      0.5f,
+      -0.5f,
+      -0.5f,
+      0.5f,
+      0.5f,
+      -0.5f,
+      0.5f,
+      0.5f,
+      -0.5f,
+      0.5f,
+      0.5f,
+      0.5f,
+      0.5f,
+      -0.5f,
+      0.5f,
+
+      // Bottom face (-Y)
+      -0.5f,
+      -0.5f,
+      -0.5f,
+      0.5f,
+      -0.5f,
+      -0.5f,
+      0.5f,
+      -0.5f,
+      0.5f,
+      0.5f,
+      -0.5f,
+      0.5f,
+      -0.5f,
+      -0.5f,
+      0.5f,
+      -0.5f,
+      -0.5f,
+      -0.5f,
+
+      // Top face (+Y)
+      -0.5f,
+      0.5f,
+      0.5f,
+      0.5f,
+      0.5f,
+      0.5f,
+      0.5f,
+      0.5f,
+      -0.5f,
+      0.5f,
+      0.5f,
+      -0.5f,
+      -0.5f,
+      0.5f,
+      -0.5f,
+      -0.5f,
+      0.5f,
+      0.5f,
   };
   float planeVertices[] = {
       // positions          // texture Coords (note we set these higher than 1
@@ -392,6 +516,40 @@ int main() {
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
   glBindVertexArray(0);
+  // regularcube VAO
+  unsigned int regularCubeVAO, regularCubeVBO;
+  glGenVertexArrays(1, &regularCubeVAO);
+  glGenBuffers(1, &regularCubeVBO);
+  glBindVertexArray(regularCubeVAO);
+  glBindBuffer(GL_ARRAY_BUFFER, regularCubeVBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(regularCube), &regularCube,
+               GL_STATIC_DRAW);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+
+  unsigned int uniformBlockIndexRed =
+      glGetUniformBlockIndex(shaderRed.ID, "Matrices");
+  unsigned int uniformBlockIndexGreen =
+      glGetUniformBlockIndex(shaderGreen.ID, "Matrices");
+  unsigned int uniformBlockIndexBlue =
+      glGetUniformBlockIndex(shaderBlue.ID, "Matrices");
+  unsigned int uniformBlockIndexYellow =
+      glGetUniformBlockIndex(shaderYellow.ID, "Matrices");
+
+  glUniformBlockBinding(shaderRed.ID, uniformBlockIndexRed, 0);
+  glUniformBlockBinding(shaderGreen.ID, uniformBlockIndexGreen, 0);
+  glUniformBlockBinding(shaderBlue.ID, uniformBlockIndexBlue, 0);
+  glUniformBlockBinding(shaderYellow.ID, uniformBlockIndexYellow, 0);
+
+  // uniform glBufferobject for lighting
+  unsigned int uboMatricies;
+  glGenBuffers(1, &uboMatricies);
+  glBindBuffer(GL_UNIFORM_BUFFER, uboMatricies);
+  glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
+  glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+  glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboMatricies, 0,
+                    2 * sizeof(glm::mat4));
 
   unsigned int floorTexture = loadTexture("../assets/metal.png");
   unsigned int cubeTexture = loadTexture("../assets/container.jpg");
@@ -568,6 +726,16 @@ int main() {
         (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.001f, 100.0f);
     glm::mat4 skyboxView = glm::mat4(glm::mat3(view));
 
+    glBindBuffer(GL_UNIFORM_BUFFER, uboMatricies);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4),
+                    glm::value_ptr(projection));
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    glBindBuffer(GL_UNIFORM_BUFFER, uboMatricies);
+    glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4),
+                    glm::value_ptr(view));
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
     // Shader setup for the entire regular-screen pass.
     shader.use();
     shader.setMat4("view", view);
@@ -594,6 +762,37 @@ int main() {
     lightCubeShader.use();
     lightCubeShader.setMat4("projection", projection);
     lightCubeShader.setMat4("view", view);
+
+    // draw 4 cubes
+    // RED
+    glBindVertexArray(regularCubeVAO);
+    shaderRed.use();
+    model =
+        glm::translate(model, glm::vec3(-0.75f, 0.75f, 0.0f)); // move top-left
+    shaderRed.setMat4("model", model);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    // GREEN
+    shaderGreen.use();
+    model = glm::mat4(1.0f);
+    model =
+        glm::translate(model, glm::vec3(0.75f, 0.75f, 0.0f)); // move top-right
+    shaderGreen.setMat4("model", model);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    // YELLOW
+    shaderYellow.use();
+    model = glm::mat4(1.0f);
+    model = glm::translate(model,
+                           glm::vec3(-0.75f, -0.75f, 0.0f)); // move bottom-left
+    shaderYellow.setMat4("model", model);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    // BLUE
+    shaderBlue.use();
+    model = glm::mat4(1.0f);
+    model = glm::translate(model,
+                           glm::vec3(0.75f, -0.75f, 0.0f)); // move bottom-right
+    shaderBlue.setMat4("model", model);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glBindVertexArray(0);
 
     // Regular textured cubes.
     shader.use();
