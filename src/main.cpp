@@ -60,10 +60,7 @@ struct SpotLight {
 
 DirectionalLight dirLight;
 
-PointLight pointLights[4] = {{glm::vec3(0.7f, 0.2f, 2.0f)},
-                             {glm::vec3(2.3f, -3.3f, -4.0f)},
-                             {glm::vec3(-4.0f, 2.0f, -12.0f)},
-                             {glm::vec3(0.0f, 0.0f, -3.0f)}};
+PointLight pointLights[4] = {{glm::vec3(0.7f, 0.2f, 2.0f)}, {glm::vec3(2.3f, -3.3f, -4.0f)}, {glm::vec3(-4.0f, 2.0f, -12.0f)}, {glm::vec3(0.0f, 0.0f, -3.0f)}};
 
 SpotLight spotLight;
 
@@ -90,16 +87,12 @@ unsigned int loadTexture(char const *path) {
       format = GL_RGBA;
 
     glBindTexture(GL_TEXTURE_2D, textureID);
-    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format,
-                 GL_UNSIGNED_BYTE, data);
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
-                    format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
-                    format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                    GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     stbi_image_free(data);
@@ -118,8 +111,7 @@ unsigned int loadCubemap(vector<std::string> faces) {
 
   int width, height, nrChannels;
   for (unsigned int i = 0; i < faces.size(); i++) {
-    unsigned char *data =
-        stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+    unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
     if (data) {
       GLenum format;
       if (nrChannels == 1)
@@ -131,8 +123,7 @@ unsigned int loadCubemap(vector<std::string> faces) {
       else
         format = GL_RGBA;
 
-      glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, format, width, height,
-                   0, format, GL_UNSIGNED_BYTE, data);
+      glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
       stbi_image_free(data);
     } else {
       logger(ERROR, "Cubemap texture failed to load at path: " + faces[i]);
@@ -154,8 +145,7 @@ int main() {
     logger(ERROR, "windowSystem::Failed to initialize GLFW");
     return -1; // or stop engine
   }
-  globalApplication::window =
-      windowSystem::makeWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "OpenGL Window");
+  globalApplication::window = windowSystem::makeWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "OpenGL Window");
   if (!globalApplication::window) {
     logger(ERROR, "windowSystem::Failed to create GLFW window");
     windowSystem::glfw_shutdown();
@@ -168,8 +158,7 @@ int main() {
   globalApplication::input.setupMouse(globalApplication::window);
 
   // tell GLFW to capture our mouse
-  glfwSetInputMode(globalApplication::window, GLFW_CURSOR,
-                   GLFW_CURSOR_DISABLED);
+  glfwSetInputMode(globalApplication::window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
   // initialize GLAD before we can use any opengl functions
   // cast's the glfw function which gives the OS specific function for GLAD to
@@ -180,8 +169,7 @@ int main() {
     return -1;
   }
 
-  glfwGetFramebufferSize(globalApplication::window, &SCREEN_WIDTH,
-                         &SCREEN_HEIGHT);
+  glfwGetFramebufferSize(globalApplication::window, &SCREEN_WIDTH, &SCREEN_HEIGHT);
   glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
   if (!imguiLayer::imguiSetup(globalApplication::window)) {
@@ -191,18 +179,12 @@ int main() {
 
   glEnable(GL_DEPTH_TEST); // enable depth testing for 3D
 
-  Shader shader("../shaders/defaultShader.vert",
-                "../shaders/defaultShader.frag");
-  Shader reflectionShader("../shaders/refractionShader.vert",
-                          "../shaders/refractionShader.frag");
-  Shader windowShader("../shaders/windowShader.vert",
-                      "../shaders/windowShader.frag");
-  Shader skyboxShader("../shaders/skyboxShader.vert",
-                      "../shaders/skyboxShader.frag");
-  Shader lightCubeShader("../shaders/light_cube.vert",
-                         "../shaders/light_cube.frag");
-  Shader lightingShader("../shaders/illuminateShader.vert",
-                        "../shaders/illuminateShader.frag");
+  Shader shader("../shaders/defaultShader.vert", "../shaders/defaultShader.frag");
+  Shader reflectionShader("../shaders/refractionShader.vert", "../shaders/refractionShader.frag");
+  Shader windowShader("../shaders/windowShader.vert", "../shaders/windowShader.frag");
+  Shader skyboxShader("../shaders/skyboxShader.vert", "../shaders/skyboxShader.frag");
+  Shader lightCubeShader("../shaders/light_cube.vert", "../shaders/light_cube.frag");
+  Shader lightingShader("../shaders/illuminateShader.vert", "../shaders/illuminateShader.frag");
   // for ubo example
   Shader shaderRed("../shaders/uboshader.vert", "../shaders/red.frag");
   Shader shaderGreen("../shaders/uboshader.vert", "../shaders/green.frag");
@@ -220,233 +202,17 @@ int main() {
   counter-clockwise order. This takes some practice, but try visualizing this
   yourself and see that this is correct.
 */
-  float cubeVertices[] = {
-      // Back face
-      -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // Bottom-left
-      0.5f, 0.5f, -0.5f, 1.0f, 1.0f,   // top-right
-      0.5f, -0.5f, -0.5f, 1.0f, 0.0f,  // bottom-right
-      0.5f, 0.5f, -0.5f, 1.0f, 1.0f,   // top-right
-      -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // bottom-left
-      -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,  // top-left
-      // Front face
-      -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, // bottom-left
-      0.5f, -0.5f, 0.5f, 1.0f, 0.0f,  // bottom-right
-      0.5f, 0.5f, 0.5f, 1.0f, 1.0f,   // top-right
-      0.5f, 0.5f, 0.5f, 1.0f, 1.0f,   // top-right
-      -0.5f, 0.5f, 0.5f, 0.0f, 1.0f,  // top-left
-      -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, // bottom-left
-      // Left face
-      -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,   // top-right
-      -0.5f, 0.5f, -0.5f, 1.0f, 1.0f,  // top-left
-      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // bottom-left
-      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // bottom-left
-      -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,  // bottom-right
-      -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,   // top-right
-                                       // Right face
-      0.5f, 0.5f, 0.5f, 1.0f, 0.0f,    // top-left
-      0.5f, -0.5f, -0.5f, 0.0f, 1.0f,  // bottom-right
-      0.5f, 0.5f, -0.5f, 1.0f, 1.0f,   // top-right
-      0.5f, -0.5f, -0.5f, 0.0f, 1.0f,  // bottom-right
-      0.5f, 0.5f, 0.5f, 1.0f, 0.0f,    // top-left
-      0.5f, -0.5f, 0.5f, 0.0f, 0.0f,   // bottom-left
-      // Bottom face
-      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // top-right
-      0.5f, -0.5f, -0.5f, 1.0f, 1.0f,  // top-left
-      0.5f, -0.5f, 0.5f, 1.0f, 0.0f,   // bottom-left
-      0.5f, -0.5f, 0.5f, 1.0f, 0.0f,   // bottom-left
-      -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,  // bottom-right
-      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // top-right
-      // Top face
-      -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, // top-left
-      0.5f, 0.5f, 0.5f, 1.0f, 0.0f,   // bottom-right
-      0.5f, 0.5f, -0.5f, 1.0f, 1.0f,  // top-right
-      0.5f, 0.5f, 0.5f, 1.0f, 0.0f,   // bottom-right
-      -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, // top-left
-      -0.5f, 0.5f, 0.5f, 0.0f, 0.0f   // bottom-left
-  };
+  float cubeVertices[] = {-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,  0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 0.5f,  -0.5f, -0.5f, 1.0f, 0.0f,  0.5f,  0.5f, -0.5f, 1.0f, 1.0f, -0.5f, -0.5f, -0.5f, 0.0f, 0.0f - 0.5f, 0.5f, -0.5f, 0.0f, 1.0f,  -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 0.5f,  -0.5f, 0.5f, 1.0f, 0.0f, 0.5f,  0.5f, 0.5f, 1.0f, 1.0f, 0.5f,  0.5f, 0.5f, 1.0f, 1.0f,  -0.5f, 0.5f, 0.5f, 0.0f, 1.0f,  -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,  -0.5f, 0.5f,  0.5f, 1.0f, 0.0f, -0.5f, 0.5f, -0.5f, 1.0f, 1.0f, -0.5f, -0.5f, -0.5f, 0.0f, 1.0f - 0.5f, -0.5f, -0.5f, 0.0f, 1.0f - 0.5f, -0.5f, 0.5f, 0.0f,  0.0f, -0.5f, 0.5f,  0.5f, 1.0f, 0.0f, 0.5f, 0.5f,
+                          0.5f,  1.0f,  0.0f,  0.5f, -0.5f, -0.5f, 0.0f, 1.0f,  0.5f, 0.5f, -0.5f, 1.0f,  1.0f,  0.5f, -0.5f, -0.5f, 0.0f, 1.0f,  0.5f, 0.5f, 0.5f,  1.0f,  0.0f,  0.5f, -0.5f,       0.5f, 0.0f,  0.0f, -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.5f, -0.5f, 0.5f, 1.0f, 0.0f, -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, 0.5f, 0.5f,  0.5f, 1.0f,  0.0f, 0.5f, 0.5f,  -0.5f, 1.0f,  1.0f, 0.5f,        0.5f,  0.5f,  1.0f, 0.0f,        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,  -0.5f, 0.5f, 0.5f, 0.0f, 0.0f};
   float regularCube[] = {
-      // Back face (-Z)
-      0.5f,
-      -0.5f,
-      -0.5f,
-      -0.5f,
-      -0.5f,
-      -0.5f,
-      -0.5f,
-      0.5f,
-      -0.5f,
-      -0.5f,
-      0.5f,
-      -0.5f,
-      0.5f,
-      0.5f,
-      -0.5f,
-      0.5f,
-      -0.5f,
-      -0.5f,
-
-      // Front face (+Z)
-      -0.5f,
-      -0.5f,
-      0.5f,
-      0.5f,
-      -0.5f,
-      0.5f,
-      0.5f,
-      0.5f,
-      0.5f,
-      0.5f,
-      0.5f,
-      0.5f,
-      -0.5f,
-      0.5f,
-      0.5f,
-      -0.5f,
-      -0.5f,
-      0.5f,
-
-      // Left face (-X)
-      -0.5f,
-      -0.5f,
-      -0.5f,
-      -0.5f,
-      -0.5f,
-      0.5f,
-      -0.5f,
-      0.5f,
-      0.5f,
-      -0.5f,
-      0.5f,
-      0.5f,
-      -0.5f,
-      0.5f,
-      -0.5f,
-      -0.5f,
-      -0.5f,
-      -0.5f,
-
-      // Right face (+X)
-      0.5f,
-      -0.5f,
-      0.5f,
-      0.5f,
-      -0.5f,
-      -0.5f,
-      0.5f,
-      0.5f,
-      -0.5f,
-      0.5f,
-      0.5f,
-      -0.5f,
-      0.5f,
-      0.5f,
-      0.5f,
-      0.5f,
-      -0.5f,
-      0.5f,
-
-      // Bottom face (-Y)
-      -0.5f,
-      -0.5f,
-      -0.5f,
-      0.5f,
-      -0.5f,
-      -0.5f,
-      0.5f,
-      -0.5f,
-      0.5f,
-      0.5f,
-      -0.5f,
-      0.5f,
-      -0.5f,
-      -0.5f,
-      0.5f,
-      -0.5f,
-      -0.5f,
-      -0.5f,
-
-      // Top face (+Y)
-      -0.5f,
-      0.5f,
-      0.5f,
-      0.5f,
-      0.5f,
-      0.5f,
-      0.5f,
-      0.5f,
-      -0.5f,
-      0.5f,
-      0.5f,
-      -0.5f,
-      -0.5f,
-      0.5f,
-      -0.5f,
-      -0.5f,
-      0.5f,
-      0.5f,
+      0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f, 0.5f,
   };
-  float planeVertices[] = {
-      // positions          // texture Coords (note we set these higher than 1
-      // (together with GL_REPEAT as texture wrapping mode). this will cause the
-      // floor texture to repeat)
-      5.0f, -0.5f, 5.0f, 2.0f, 0.0f, -5.0f, -0.5f, 5.0f,
-      0.0f, 0.0f, -5.0f, -0.5f, -5.0f, 0.0f, 2.0f,
+  float planeVertices[] = {5.0f, -0.5f, 5.0f, 2.0f, 0.0f, -5.0f, -0.5f, 5.0f, 0.0f, 0.0f, -5.0f, -0.5f, -5.0f, 0.0f, 2.0f, 5.0f, -0.5f, 5.0f, 2.0f, 0.0f, -5.0f, -0.5f, -5.0f, 0.0f, 2.0f, 5.0f, -0.5f, -5.0f, 2.0f, 2.0f};
+  float transparentVertices[] = {0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f, -0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 0.5f, 0.0f, 1.0f, 0.0f};
+  float skyboxVertices[] = {-1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f};
+  float vertices[] = {-0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f};
 
-      5.0f, -0.5f, 5.0f, 2.0f, 0.0f, -5.0f, -0.5f, -5.0f,
-      0.0f, 2.0f, 5.0f, -0.5f, -5.0f, 2.0f, 2.0f};
-  float transparentVertices[] = {
-      // positions         // texture Coords (swapped y coordinates because
-      // texture is flipped upside down)
-      0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, -0.5f, 0.0f,
-      0.0f, 1.0f, 1.0f, -0.5f, 0.0f, 1.0f, 1.0f,
-
-      0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, -0.5f, 0.0f,
-      1.0f, 1.0f, 1.0f, 0.5f, 0.0f, 1.0f, 0.0f};
-
-  float skyboxVertices[] = {
-      // positions
-      -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f,
-      1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f,
-
-      -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f,
-      -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f,
-
-      1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-      1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f,
-
-      -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-      1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f,
-
-      -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f,
-      1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f,
-
-      -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f,
-      1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f};
-
-  float vertices[] = {
-      // positions
-      -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f, 0.5f, -0.5f,
-      0.5f, 0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f, -0.5f, -0.5f,
-
-      -0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 0.5f,
-      0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, -0.5f, 0.5f,
-
-      -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f, -0.5f, -0.5f,
-      -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f,
-
-      0.5f, 0.5f, 0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f,
-      0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 0.5f,
-
-      -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f,
-      0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f, -0.5f,
-
-      -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f, 0.5f,
-      0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f};
-
-  vector<glm::vec3> windows{
-      glm::vec3(-1.5f, 0.0f, -0.48f), glm::vec3(1.5f, 0.0f, 0.51f),
-      glm::vec3(0.0f, 0.0f, 0.7f), glm::vec3(-0.3f, 0.0f, -2.3f),
-      glm::vec3(0.5f, 0.0f, -0.6f)};
+  vector<glm::vec3> windows{glm::vec3(-1.5f, 0.0f, -0.48f), glm::vec3(1.5f, 0.0f, 0.51f), glm::vec3(0.0f, 0.0f, 0.7f), glm::vec3(-0.3f, 0.0f, -2.3f), glm::vec3(0.5f, 0.0f, -0.6f)};
 
   // first, configure the cube's VAO (and VBO)
   unsigned int VBO, lightCubeVAO;
@@ -469,13 +235,11 @@ int main() {
   glGenBuffers(1, &cubeVBO);
   glBindVertexArray(cubeVAO);
   glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), &cubeVertices,
-               GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), &cubeVertices, GL_STATIC_DRAW);
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(1);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                        (void *)(3 * sizeof(float)));
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
   glBindVertexArray(0);
   // plane VAO
   unsigned int planeVAO, planeVBO;
@@ -483,13 +247,11 @@ int main() {
   glGenBuffers(1, &planeVBO);
   glBindVertexArray(planeVAO);
   glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), &planeVertices,
-               GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), &planeVertices, GL_STATIC_DRAW);
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(1);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                        (void *)(3 * sizeof(float)));
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
   glBindVertexArray(0);
   // transparent VAO
   unsigned int transparentVAO, transparentVBO;
@@ -497,13 +259,11 @@ int main() {
   glGenBuffers(1, &transparentVBO);
   glBindVertexArray(transparentVAO);
   glBindBuffer(GL_ARRAY_BUFFER, transparentVBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(transparentVertices),
-               transparentVertices, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(transparentVertices), transparentVertices, GL_STATIC_DRAW);
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(1);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                        (void *)(3 * sizeof(float)));
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
   glBindVertexArray(0);
   // skybox VAO
   unsigned int skyboxVAO, skyboxVBO;
@@ -511,8 +271,7 @@ int main() {
   glGenBuffers(1, &skyboxVBO);
   glBindVertexArray(skyboxVAO);
   glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices,
-               GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
   glBindVertexArray(0);
@@ -522,19 +281,14 @@ int main() {
   glGenBuffers(1, &regularCubeVBO);
   glBindVertexArray(regularCubeVAO);
   glBindBuffer(GL_ARRAY_BUFFER, regularCubeVBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(regularCube), &regularCube,
-               GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(regularCube), &regularCube, GL_STATIC_DRAW);
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
 
-  unsigned int uniformBlockIndexRed =
-      glGetUniformBlockIndex(shaderRed.ID, "Matrices");
-  unsigned int uniformBlockIndexGreen =
-      glGetUniformBlockIndex(shaderGreen.ID, "Matrices");
-  unsigned int uniformBlockIndexBlue =
-      glGetUniformBlockIndex(shaderBlue.ID, "Matrices");
-  unsigned int uniformBlockIndexYellow =
-      glGetUniformBlockIndex(shaderYellow.ID, "Matrices");
+  unsigned int uniformBlockIndexRed = glGetUniformBlockIndex(shaderRed.ID, "Matrices");
+  unsigned int uniformBlockIndexGreen = glGetUniformBlockIndex(shaderGreen.ID, "Matrices");
+  unsigned int uniformBlockIndexBlue = glGetUniformBlockIndex(shaderBlue.ID, "Matrices");
+  unsigned int uniformBlockIndexYellow = glGetUniformBlockIndex(shaderYellow.ID, "Matrices");
 
   glUniformBlockBinding(shaderRed.ID, uniformBlockIndexRed, 0);
   glUniformBlockBinding(shaderGreen.ID, uniformBlockIndexGreen, 0);
@@ -548,25 +302,19 @@ int main() {
   glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-  glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboMatricies, 0,
-                    2 * sizeof(glm::mat4));
+  glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboMatricies, 0, 2 * sizeof(glm::mat4));
 
   unsigned int floorTexture = loadTexture("../assets/metal.png");
   unsigned int cubeTexture = loadTexture("../assets/container.jpg");
-  unsigned int transparentTexture =
-      loadTexture("../assets/blending_transparent_window.png");
+  unsigned int transparentTexture = loadTexture("../assets/blending_transparent_window.png");
 
   auto t0 = std::chrono::high_resolution_clock::now();
   Model backpack("../assets/blackpink.obj", false, true);
   auto t1 = std::chrono::high_resolution_clock::now();
 
-  std::cout << "Total load: " << std::chrono::duration<double>(t1 - t0).count()
-            << "s\n";
+  std::cout << "Total load: " << std::chrono::duration<double>(t1 - t0).count() << "s\n";
 
-  vector<std::string> faces{
-      "../assets/skybox2/right.png", "../assets/skybox2/left.png",
-      "../assets/skybox2/top.png", "../assets/skybox2/bottom.png",
-      "../assets/skybox2/front.png", "../assets/skybox2/back.png"};
+  vector<std::string> faces{"../assets/skybox2/right.png", "../assets/skybox2/left.png", "../assets/skybox2/top.png", "../assets/skybox2/bottom.png", "../assets/skybox2/front.png", "../assets/skybox2/back.png"};
   unsigned int cubemapTexture = loadCubemap(faces);
 
   globalApplication::controller.showControllers();
@@ -610,8 +358,7 @@ int main() {
 
       ImGui::Checkbox("Enable Dir Light", &dirLight.enabled);
 
-      ImGui::DragFloat3("Dir Direction", glm::value_ptr(dirLight.direction),
-                        0.1f);
+      ImGui::DragFloat3("Dir Direction", glm::value_ptr(dirLight.direction), 0.1f);
 
       ImGui::ColorEdit3("Dir Ambient", glm::value_ptr(dirLight.ambient));
       ImGui::ColorEdit3("Dir Diffuse", glm::value_ptr(dirLight.diffuse));
@@ -627,32 +374,25 @@ int main() {
           ImGui::Checkbox(enabled.c_str(), &pointLights[i].enabled);
 
           std::string pos = "Position##" + std::to_string(i);
-          ImGui::DragFloat3(pos.c_str(),
-                            glm::value_ptr(pointLights[i].position), 0.1f);
+          ImGui::DragFloat3(pos.c_str(), glm::value_ptr(pointLights[i].position), 0.1f);
 
           std::string ambient = "Ambient##" + std::to_string(i);
-          ImGui::ColorEdit3(ambient.c_str(),
-                            glm::value_ptr(pointLights[i].ambient));
+          ImGui::ColorEdit3(ambient.c_str(), glm::value_ptr(pointLights[i].ambient));
 
           std::string diffuse = "Diffuse##" + std::to_string(i);
-          ImGui::ColorEdit3(diffuse.c_str(),
-                            glm::value_ptr(pointLights[i].diffuse));
+          ImGui::ColorEdit3(diffuse.c_str(), glm::value_ptr(pointLights[i].diffuse));
 
           std::string specular = "Specular##" + std::to_string(i);
-          ImGui::ColorEdit3(specular.c_str(),
-                            glm::value_ptr(pointLights[i].specular));
+          ImGui::ColorEdit3(specular.c_str(), glm::value_ptr(pointLights[i].specular));
 
           std::string constant = "Constant##" + std::to_string(i);
-          ImGui::DragFloat(constant.c_str(), &pointLights[i].constant, 0.01f,
-                           0.0f, 5.0f);
+          ImGui::DragFloat(constant.c_str(), &pointLights[i].constant, 0.01f, 0.0f, 5.0f);
 
           std::string linear = "Linear##" + std::to_string(i);
-          ImGui::DragFloat(linear.c_str(), &pointLights[i].linear, 0.001f, 0.0f,
-                           1.0f);
+          ImGui::DragFloat(linear.c_str(), &pointLights[i].linear, 0.001f, 0.0f, 1.0f);
 
           std::string quadratic = "Quadratic##" + std::to_string(i);
-          ImGui::DragFloat(quadratic.c_str(), &pointLights[i].quadratic, 0.001f,
-                           0.0f, 1.0f);
+          ImGui::DragFloat(quadratic.c_str(), &pointLights[i].quadratic, 0.001f, 0.0f, 1.0f);
 
           ImGui::TreePop();
         }
@@ -706,13 +446,11 @@ int main() {
 
     std::map<float, glm::vec3> sorted;
     for (unsigned int i = 0; i < windows.size(); i++) {
-      float distance =
-          glm::length(globalApplication::camera.Position - windows[i]);
+      float distance = glm::length(globalApplication::camera.Position - windows[i]);
       sorted[distance] = windows[i];
     }
 
-    glm::vec3 positions[2] = {glm::vec3(-1.0f, 0.0f, -1.0f),
-                              glm::vec3(2.0f, 0.0f, 0.0f)};
+    glm::vec3 positions[2] = {glm::vec3(-1.0f, 0.0f, -1.0f), glm::vec3(2.0f, 0.0f, 0.0f)};
 
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -721,19 +459,15 @@ int main() {
 
     glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 view = globalApplication::camera.GetViewMatrix();
-    glm::mat4 projection = glm::perspective(
-        glm::radians(globalApplication::camera.Zoom),
-        (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.001f, 100.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(globalApplication::camera.Zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.001f, 100.0f);
     glm::mat4 skyboxView = glm::mat4(glm::mat3(view));
 
     glBindBuffer(GL_UNIFORM_BUFFER, uboMatricies);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4),
-                    glm::value_ptr(projection));
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     glBindBuffer(GL_UNIFORM_BUFFER, uboMatricies);
-    glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4),
-                    glm::value_ptr(view));
+    glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     // Shader setup for the entire regular-screen pass.
@@ -767,29 +501,25 @@ int main() {
     // RED
     glBindVertexArray(regularCubeVAO);
     shaderRed.use();
-    model =
-        glm::translate(model, glm::vec3(-0.75f, 0.75f, 0.0f)); // move top-left
+    model = glm::translate(model, glm::vec3(-0.75f, 0.75f, 0.0f)); // move top-left
     shaderRed.setMat4("model", model);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     // GREEN
     shaderGreen.use();
     model = glm::mat4(1.0f);
-    model =
-        glm::translate(model, glm::vec3(0.75f, 0.75f, 0.0f)); // move top-right
+    model = glm::translate(model, glm::vec3(0.75f, 0.75f, 0.0f)); // move top-right
     shaderGreen.setMat4("model", model);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     // YELLOW
     shaderYellow.use();
     model = glm::mat4(1.0f);
-    model = glm::translate(model,
-                           glm::vec3(-0.75f, -0.75f, 0.0f)); // move bottom-left
+    model = glm::translate(model, glm::vec3(-0.75f, -0.75f, 0.0f)); // move bottom-left
     shaderYellow.setMat4("model", model);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     // BLUE
     shaderBlue.use();
     model = glm::mat4(1.0f);
-    model = glm::translate(model,
-                           glm::vec3(0.75f, -0.75f, 0.0f)); // move bottom-right
+    model = glm::translate(model, glm::vec3(0.75f, -0.75f, 0.0f)); // move bottom-right
     shaderBlue.setMat4("model", model);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glBindVertexArray(0);
@@ -848,8 +578,7 @@ int main() {
     glBindTexture(GL_TEXTURE_2D, transparentTexture);
     // reverse iterator so we draw the ones behind first before the ones in
     // front
-    for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin();
-         it != sorted.rend(); ++it) {
+    for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it) {
       model = glm::mat4(1.0f);
       model = glm::translate(model, it->second);
       windowShader.setMat4("model", model);
@@ -863,57 +592,35 @@ int main() {
     // Directional light
     lightingShader.setVec3("dirLight.direction", dirLight.direction);
 
-    lightingShader.setVec3("dirLight.ambient", dirLight.enabled
-                                                   ? dirLight.ambient
-                                                   : glm::vec3(0.0f));
-    lightingShader.setVec3("dirLight.diffuse", dirLight.enabled
-                                                   ? dirLight.diffuse
-                                                   : glm::vec3(0.0f));
-    lightingShader.setVec3("dirLight.specular", dirLight.enabled
-                                                    ? dirLight.specular
-                                                    : glm::vec3(0.0f));
+    lightingShader.setVec3("dirLight.ambient", dirLight.enabled ? dirLight.ambient : glm::vec3(0.0f));
+    lightingShader.setVec3("dirLight.diffuse", dirLight.enabled ? dirLight.diffuse : glm::vec3(0.0f));
+    lightingShader.setVec3("dirLight.specular", dirLight.enabled ? dirLight.specular : glm::vec3(0.0f));
 
     // Point lights
     for (int i = 0; i < 4; i++) {
       std::string index = "pointLights[" + std::to_string(i) + "]";
 
       lightingShader.setVec3(index + ".position", pointLights[i].position);
-      lightingShader.setVec3(index + ".ambient", pointLights[i].enabled
-                                                     ? pointLights[i].ambient
-                                                     : glm::vec3(0.0f));
-      lightingShader.setVec3(index + ".diffuse", pointLights[i].enabled
-                                                     ? pointLights[i].diffuse
-                                                     : glm::vec3(0.0f));
-      lightingShader.setVec3(index + ".specular", pointLights[i].enabled
-                                                      ? pointLights[i].specular
-                                                      : glm::vec3(0.0f));
+      lightingShader.setVec3(index + ".ambient", pointLights[i].enabled ? pointLights[i].ambient : glm::vec3(0.0f));
+      lightingShader.setVec3(index + ".diffuse", pointLights[i].enabled ? pointLights[i].diffuse : glm::vec3(0.0f));
+      lightingShader.setVec3(index + ".specular", pointLights[i].enabled ? pointLights[i].specular : glm::vec3(0.0f));
       lightingShader.setFloat(index + ".constant", pointLights[i].constant);
       lightingShader.setFloat(index + ".linear", pointLights[i].linear);
       lightingShader.setFloat(index + ".quadratic", pointLights[i].quadratic);
     }
 
     // Spotlight
-    lightingShader.setVec3("spotLight.position",
-                           globalApplication::camera.Position);
-    lightingShader.setVec3("spotLight.direction",
-                           globalApplication::camera.Front);
+    lightingShader.setVec3("spotLight.position", globalApplication::camera.Position);
+    lightingShader.setVec3("spotLight.direction", globalApplication::camera.Front);
 
-    lightingShader.setVec3("spotLight.ambient", spotLight.enabled
-                                                    ? spotLight.ambient
-                                                    : glm::vec3(0.0f));
-    lightingShader.setVec3("spotLight.diffuse", spotLight.enabled
-                                                    ? spotLight.diffuse
-                                                    : glm::vec3(0.0f));
-    lightingShader.setVec3("spotLight.specular", spotLight.enabled
-                                                     ? spotLight.specular
-                                                     : glm::vec3(0.0f));
+    lightingShader.setVec3("spotLight.ambient", spotLight.enabled ? spotLight.ambient : glm::vec3(0.0f));
+    lightingShader.setVec3("spotLight.diffuse", spotLight.enabled ? spotLight.diffuse : glm::vec3(0.0f));
+    lightingShader.setVec3("spotLight.specular", spotLight.enabled ? spotLight.specular : glm::vec3(0.0f));
     lightingShader.setFloat("spotLight.constant", spotLight.constant);
     lightingShader.setFloat("spotLight.linear", spotLight.linear);
     lightingShader.setFloat("spotLight.quadratic", spotLight.quadratic);
-    lightingShader.setFloat("spotLight.cutOff",
-                            glm::cos(glm::radians(spotLight.cutOff)));
-    lightingShader.setFloat("spotLight.outerCutOff",
-                            glm::cos(glm::radians(spotLight.outerCutOff)));
+    lightingShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(spotLight.cutOff)));
+    lightingShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(spotLight.outerCutOff)));
 
     lightingShader.setFloat("material.shininess", shininess);
     lightingShader.setFloat("material.emissionStrength", emissionStrength);
@@ -930,9 +637,7 @@ int main() {
       model = glm::translate(model, pointLights[i].position);
       model = glm::scale(model, glm::vec3(0.2f)); // Make it a smaller cube
       lightCubeShader.setMat4("model", model);
-      lightCubeShader.setVec3("color", pointLights[i].enabled
-                                           ? pointLights[i].diffuse
-                                           : glm::vec3(0.0f));
+      lightCubeShader.setVec3("color", pointLights[i].enabled ? pointLights[i].diffuse : glm::vec3(0.0f));
       glDrawArrays(GL_TRIANGLES, 0, 36);
     }
     // Rendering
