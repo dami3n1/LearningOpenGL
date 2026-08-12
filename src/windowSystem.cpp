@@ -4,60 +4,56 @@
 #include "logger.h"
 
 // glfw will autoatically fill in data
-void framebuffer_size_callback(GLFWwindow *window, int width, int height)
-{
-    // set viewport sie for opengl you can make this smaller than the window size and render stuff behind it
-    glViewport(0, 0, width, height);
+void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
+  // set viewport sie for opengl you can make this smaller than the window size and render stuff behind it
+  glViewport(0, 0, width, height);
 }
 
-bool windowSystem::glfw_init()
-{
-    logger(INFO, "Initializing GLFW");
-    if (!glfwInit()) // Initiates glfw (returns GL_TRUE if successfull)
-    {
-        logger(ERROR, "Failed to initialize GLFW");\
-        return false;
-    }
+bool windowSystem::glfw_init() {
+  logger(INFO, "Initializing GLFW");
+  if (!glfwInit()) // Initiates glfw (returns GL_TRUE if successfull)
+  {
+    logger(ERROR, "Failed to initialize GLFW");
+    return false;
+  }
 
-    // configure the next glfwCreateWindow() with glfwWindowHint();
-    // tells glfw what OpenGL Version will be used Program will crash if client does not have proper version
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    //glfwWindowHint(GLFW_RESIZABLE, GL_FALSE); // allow window to be resized by user
+  // configure the next glfwCreateWindow() with glfwWindowHint();
+  // tells glfw what OpenGL Version will be used Program will crash if client does not have proper version
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  glfwWindowHint(GLFW_SAMPLES, 4); // Multi Sample Anti-Aliasing
+                                   // glfwWindowHint(GLFW_RESIZABLE, GL_FALSE); // allow window to be resized by user
 
 #ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-    return true;
+  return true;
 }
 
-GLFWwindow* windowSystem::makeWindow(int screenWidth, int screenHeight, const char* title)
-{
-    logger(INFO, "Creating GLFW window");
-    // create window object
-    // define how window should be set up and creates it
-    GLFWwindow *window = glfwCreateWindow(screenWidth, screenHeight, title, NULL, NULL);
-    if (window == NULL)
-    {
-        logger(ERROR, "Failed to create GLFW window");
-        glfwTerminate();
-        return nullptr;
-    }
-    // makes a context for the window and assigns to it
-    glfwMakeContextCurrent(window);
-    // tell glfw to call function when window resize; glfw will autoatically fill in data for framebuffer_size_callback
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    std::string windowinfo = "GLFW Window created: '" + std::string(title) + "'";
-    logger(INFO, windowinfo);
-
-    return window;
-}
-
-void windowSystem::glfw_shutdown()
-{
-    logger(WARN, "Terminating GLFW");
-    // clean glfw resources;
+GLFWwindow *windowSystem::makeWindow(int screenWidth, int screenHeight, const char *title) {
+  logger(INFO, "Creating GLFW window");
+  // create window object
+  // define how window should be set up and creates it
+  GLFWwindow *window = glfwCreateWindow(screenWidth, screenHeight, title, NULL, NULL);
+  if (window == NULL) {
+    logger(ERROR, "Failed to create GLFW window");
     glfwTerminate();
+    return nullptr;
+  }
+  // makes a context for the window and assigns to it
+  glfwMakeContextCurrent(window);
+  // tell glfw to call function when window resize; glfw will autoatically fill in data for framebuffer_size_callback
+  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+  std::string windowinfo = "GLFW Window created: '" + std::string(title) + "'";
+  logger(INFO, windowinfo);
+
+  return window;
+}
+
+void windowSystem::glfw_shutdown() {
+  logger(WARN, "Terminating GLFW");
+  // clean glfw resources;
+  glfwTerminate();
 }
