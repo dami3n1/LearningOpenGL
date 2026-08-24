@@ -22,6 +22,7 @@ bool windowSystem::glfw_init() {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
   glfwWindowHint(GLFW_SAMPLES, 4); // Multi Sample Anti-Aliasing
                                    // glfwWindowHint(GLFW_RESIZABLE, GL_FALSE); // allow window to be resized by user
 

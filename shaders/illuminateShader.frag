@@ -51,14 +51,12 @@ in vec3 Normal;
 in vec3 FragPos;
 in vec2 TexCoords;
 
-float CalcBlinnPhongSpecular(vec3 normal, vec3 lightDir, vec3 viewDir)
-{
+float CalcBlinnPhongSpecular(vec3 normal, vec3 lightDir, vec3 viewDir) {
   vec3 halfwayDir = normalize(lightDir + viewDir);
   return pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
 }
 
-vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
-{
+vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir) {
   vec3 lightDir = normalize(-light.direction);
   float diff = max(dot(normal, lightDir), 0.0);
   float spec = diff > 0.0 ? CalcBlinnPhongSpecular(normal, lightDir, viewDir) : 0.0;
@@ -69,14 +67,12 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
   return ambient + diffuse + specular;
 }
 
-vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
-{
+vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir) {
   vec3 lightDir = normalize(light.position - fragPos);
   float diff = max(dot(normal, lightDir), 0.0);
   float spec = diff > 0.0 ? CalcBlinnPhongSpecular(normal, lightDir, viewDir) : 0.0;
   float distanceToLight = length(light.position - fragPos);
-  float attenuation = 1.0 / (light.constant + light.linear * distanceToLight
-                           + light.quadratic * distanceToLight * distanceToLight);
+  float attenuation = 1.0 / (distanceToLight * distanceToLight);
 
   vec3 ambient = light.ambient * vec3(texture(material.diffuse, TexCoords));
   vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, TexCoords));
@@ -84,14 +80,12 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
   return (ambient + diffuse + specular) * attenuation;
 }
 
-vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
-{
+vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir) {
   vec3 lightDir = normalize(light.position - fragPos);
   float diff = max(dot(normal, lightDir), 0.0);
   float spec = diff > 0.0 ? CalcBlinnPhongSpecular(normal, lightDir, viewDir) : 0.0;
   float distanceToLight = length(light.position - fragPos);
-  float attenuation = 1.0 / (light.constant + light.linear * distanceToLight
-                           + light.quadratic * distanceToLight * distanceToLight);
+  float attenuation = 1.0 / (distanceToLight * distanceToLight);
   float theta = dot(lightDir, normalize(-light.direction));
   float epsilon = light.cutOff - light.outerCutOff;
   float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
@@ -102,15 +96,14 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
   return (ambient + diffuse + specular) * attenuation * intensity;
 }
 
-void main()
-{
+void main() {
   vec3 normal = normalize(Normal);
   vec3 viewDir = normalize(viewPos - FragPos);
 
-  vec3 result = CalcDirLight(dirLight, normal, viewDir);
+  vec3 result = vec3(0); // CalcDirLight(dirLight, normal, viewDir);
   for (int i = 0; i < NR_POINT_LIGHTS; ++i)
     result += CalcPointLight(pointLights[i], normal, FragPos, viewDir);
-  result += CalcSpotLight(spotLight, normal, FragPos, viewDir);
+  // result += CalcSpotLight(spotLight, normal, FragPos, viewDir);
 
   vec3 emissionTexture = texture(material.emission, TexCoords).rgb;
   float emissionMask = max(emissionTexture.r, max(emissionTexture.g, emissionTexture.b));

@@ -21,7 +21,7 @@
 int SCREEN_HEIGHT = 600;
 int SCREEN_WIDTH = 800;
 
-unsigned int loadTexture(char const *path) {
+unsigned int loadTexture(char const *path, bool gammaCorrection) {
   unsigned int textureID;
   glGenTextures(1, &textureID);
 
@@ -29,15 +29,20 @@ unsigned int loadTexture(char const *path) {
   unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
   if (data) {
     GLenum format;
-    if (nrComponents == 1)
-      format = GL_RED;
-    else if (nrComponents == 3)
+    GLenum internalFormat;
+
+    if (nrComponents == 1) {
+      format = internalFormat = GL_RED;
+    } else if (nrComponents == 3) {
       format = GL_RGB;
-    else if (nrComponents == 4)
+      internalFormat = gammaCorrection ? GL_SRGB : GL_RGB;
+    } else if (nrComponents == 4) {
       format = GL_RGBA;
+      internalFormat = gammaCorrection ? GL_SRGB_ALPHA : GL_RGBA;
+    }
 
     glBindTexture(GL_TEXTURE_2D, textureID);
-    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT); // for this tutorial: use GL_CLAMP_TO_EDGE to prevent semi-transparent borders. Due to interpolation it takes texels from next repeat
@@ -92,6 +97,7 @@ int main() {
   }
 
   glEnable(GL_DEPTH_TEST); // enable depth testing for 3D
+  glEnable(GL_FRAMEBUFFER_SRGB);
 
   globalApplication::controller.showControllers();
 
@@ -124,7 +130,7 @@ int main() {
 
   // load textures
   // -------------
-  unsigned int floorTexture = loadTexture("../assets/wood.png");
+  unsigned int floorTexture = loadTexture("../assets/wood.png", true);
 
   // shader configuration
   // --------------------
@@ -144,18 +150,14 @@ int main() {
   shader.setVec3("dirLight.diffuse", glm::vec3(0.18f, 0.20f, 0.24f));
   shader.setVec3("dirLight.specular", glm::vec3(0.35f));
 
-  const std::array<glm::vec3, 4> pointLightPositions = {
-      glm::vec3(-4.0f, 1.5f, -3.0f), glm::vec3(4.0f, 2.0f, -2.0f),
-      glm::vec3(-3.0f, 1.0f, 4.0f), glm::vec3(3.5f, 1.5f, 4.5f)};
-  const std::array<glm::vec3, 4> pointLightColors = {
-      glm::vec3(1.0f, 0.25f, 0.15f), glm::vec3(0.15f, 0.35f, 1.0f),
-      glm::vec3(0.20f, 1.0f, 0.35f), glm::vec3(1.0f, 0.65f, 0.15f)};
+  const std::array<glm::vec3, 4> pointLightPositions = {glm::vec3(-4.0f, 1.5f, -3.0f), glm::vec3(4.0f, 2.0f, -2.0f), glm::vec3(-3.0f, 1.0f, 4.0f), glm::vec3(3.5f, 1.5f, 4.5f)};
+  const std::array<glm::vec3, 4> pointLightColors = {glm::vec3(1.0f, 0.25f, 0.15f), glm::vec3(0.15f, 0.35f, 1.0f), glm::vec3(0.20f, 1.0f, 0.35f), glm::vec3(1.0f, 0.65f, 0.15f)};
 
   for (std::size_t i = 0; i < pointLightPositions.size(); ++i) {
     const std::string light = "pointLights[" + std::to_string(i) + "]";
     shader.setVec3(light + ".position", pointLightPositions[i]);
     shader.setVec3(light + ".ambient", pointLightColors[i] * 0.01f);
-    shader.setVec3(light + ".diffuse", pointLightColors[i] * 0.75f);
+    shader.setVec3(light + ".diffuse", pointLightColors[i]);
     shader.setVec3(light + ".specular", pointLightColors[i]);
     shader.setFloat(light + ".constant", 1.0f);
     shader.setFloat(light + ".linear", 0.09f);
